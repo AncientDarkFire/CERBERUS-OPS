@@ -12,7 +12,7 @@
 
 local Installer = {
     VERSION = "2.1.0",
-    BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus",
+    BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main",
     DISK_NAME = "CERBERUS-OPS",
     
     FILES = {
