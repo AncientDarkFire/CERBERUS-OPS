@@ -11,6 +11,14 @@ local System = {
 }
 
 local function findDiskMount()
+    local runningProgram = shell.getRunningProgram()
+    if runningProgram and runningProgram:match("^/disk/") then
+        local mountPath = runningProgram:match("^(/disk%d*)")
+        if mountPath then
+            return mountPath .. "/cerberus"
+        end
+    end
+    
     local names = peripheral.getNames()
     for _, name in ipairs(names) do
         local ptype = peripheral.getType(name)
@@ -156,7 +164,7 @@ local function runSystem(systemName)
         if fs.exists(path .. ".lua") then
             print("Ejecutando " .. systemName .. "...")
             sleep(0.5)
-            shell.run(path)
+            dofile(path .. ".lua")
         else
             print("Error: Sistema no encontrado - " .. path .. ".lua")
         end
