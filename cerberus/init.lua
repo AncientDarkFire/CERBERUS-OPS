@@ -164,9 +164,12 @@ local function runSystem(systemName)
         if fs.exists(path .. ".lua") then
             print("Ejecutando " .. systemName .. "...")
             sleep(0.5)
-            dofile(path .. ".lua")
+            local module = dofile(path .. ".lua")
+            if module and type(module.run) == "function" then
+                module:run()
+            end
         else
-            print("Error: Sistema no encontrado - " .. path .. ".lua")
+            print("Error: Sistema no encontrado")
         end
     else
         print("Sistema desconocido: " .. systemName)
