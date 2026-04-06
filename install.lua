@@ -6,13 +6,13 @@
     Luego ese disco puede usarse para instalar en otras computadoras.
     
     Uso:
-        wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install.lua install.lua
+        wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/install.lua install.lua
         install
 ]]
 
 local Installer = {
     VERSION = "2.1.0",
-    BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus",
+    BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus",
     DISK_NAME = "CERBERUS-OPS",
     
     FILES = {

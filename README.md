@@ -21,7 +21,7 @@ Sistema de Red Presidencial para Minecraft con CC: Tweaked.
 2. Inserta un **Floppy Disk**
 3. Descarga el instalador:
    ```bash
-   wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install.lua install.lua
+   wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/install.lua install.lua
    ```
 4. Ejecuta:
    ```bash

@@ -327,7 +327,7 @@ Esta es la fuente oficial de documentación y siempre debe ser la referencia pri
 2. Insertar Floppy Disk
 3. Descargar e instalar:
    ```bash
-   wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install.lua install.lua
+   wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/install.lua install.lua
    install
    ```
 4. El disco se renombra automaticamente a **CERBERUS-OPS**

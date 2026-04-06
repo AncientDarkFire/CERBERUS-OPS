@@ -6,7 +6,7 @@
 ## INSTALACION RECOMENDADA
 
 ```bash
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install.lua install.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/install.lua install.lua
 install
 ```
 
@@ -20,32 +20,32 @@ Esto copia todo el sistema a un floppy disk.
 
 | Archivo | URL |
 |---------|-----|
-| init.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/init.lua` |
-| autorun.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/autorun.lua` |
+| init.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/init.lua` |
+| autorun.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/autorun.lua` |
 
 ### Core
 
 | Archivo | URL |
 |---------|-----|
-| logger.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/logger.lua` |
-| crypto.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/crypto.lua` |
-| network.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/network.lua` |
+| logger.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/core/logger.lua` |
+| crypto.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/core/crypto.lua` |
+| network.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/core/network.lua` |
 
 ### Presidential
 
 | Archivo | URL |
 |---------|-----|
-| sentinel_hud.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/presidential/sentinel_hud.lua` |
-| nuclear_control.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/presidential/nuclear_control.lua` |
-| secure_msg.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/presidential/secure_msg.lua` |
-| secure_docs.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/presidential/secure_docs.lua` |
+| sentinel_hud.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/presidential/sentinel_hud.lua` |
+| nuclear_control.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/presidential/nuclear_control.lua` |
+| secure_msg.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/presidential/secure_msg.lua` |
+| secure_docs.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/presidential/secure_docs.lua` |
 
 ### Templates
 
 | Archivo | URL |
 |---------|-----|
-| ui.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/lib/ui.lua` |
-| system.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/config/system.lua` |
+| ui.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/lib/ui.lua` |
+| system.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/config/system.lua` |
 
 ---
 

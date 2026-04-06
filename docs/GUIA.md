@@ -116,22 +116,22 @@ mkdir /cerberus/config
 
 ```bash
 # Boot
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/init.lua /cerberus/init.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/init.lua /cerberus/init.lua
 
 # Core
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/logger.lua /cerberus/core/logger.lua
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/crypto.lua /cerberus/core/crypto.lua
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/network.lua /cerberus/core/network.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/core/logger.lua /cerberus/core/logger.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/core/crypto.lua /cerberus/core/crypto.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/core/network.lua /cerberus/core/network.lua
 
 # Templates
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/lib/ui.lua /cerberus/lib/ui.lua
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/config/system.lua /cerberus/config/system.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/lib/ui.lua /cerberus/lib/ui.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/config/system.lua /cerberus/config/system.lua
 
 # Presidential
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/presidential/sentinel_hud.lua /cerberus/presidential/sentinel_hud.lua
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/presidential/nuclear_control.lua /cerberus/presidential/nuclear_control.lua
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/presidential/secure_msg.lua /cerberus/presidential/secure_msg.lua
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/presidential/secure_docs.lua /cerberus/presidential/secure_docs.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/presidential/sentinel_hud.lua /cerberus/presidential/sentinel_hud.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/presidential/nuclear_control.lua /cerberus/presidential/nuclear_control.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/presidential/secure_msg.lua /cerberus/presidential/secure_msg.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/cerberus/presidential/secure_docs.lua /cerberus/presidential/secure_docs.lua
 ```
 
 ### Paso 3: Reiniciar
