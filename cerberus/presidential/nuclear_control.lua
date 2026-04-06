@@ -2,7 +2,7 @@
     Nuclear Control Panel
     CERBERUS OPS - Presidential System
     Nivel de Seguridad: 4 (NEGRO)
-    Versión: 2.0.0
+    Versión: 2.1.0
 ]]
 
 local NuclearControl = {
@@ -26,12 +26,15 @@ function NuclearControl:drawPanel()
     term.setBackgroundColor(colors.black)
     term.clear()
     
+    -- Header
     term.setBackgroundColor(colors.red)
     term.setCursorPos(1, 1)
     term.write(string.rep(" ", w))
     term.setCursorPos(1, 2)
     local title = "PANEL DE CONTROL NUCLEAR - CERBERUS OPS"
-    term.setCursorPos(math.floor((w - #title) / 2), 2)
+    local x = math.floor((w - #title) / 2)
+    if x < 1 then x = 1 end
+    term.setCursorPos(x, 2)
     term.write(title)
     term.setCursorPos(1, 3)
     term.write(string.rep(" ", w))
@@ -41,7 +44,7 @@ function NuclearControl:drawPanel()
     
     local y = 5
     term.setCursorPos(2, y)
-    term.write(string.rep("=", 60))
+    term.write("================================================")
     y = y + 2
     
     term.setCursorPos(2, y)
@@ -67,7 +70,7 @@ function NuclearControl:drawPanel()
     y = y + 2
     
     term.setCursorPos(2, y)
-    term.write(string.rep("=", 60))
+    term.write("================================================")
     y = y + 2
     
     term.setCursorPos(2, y)
@@ -76,9 +79,9 @@ function NuclearControl:drawPanel()
     y = y + 1
     print("[2] Armar Sistema")
     y = y + 1
-    print("[3] Iniciar Secuencia")
+    print("[3] Iniciar Secuencia de Lanzamiento")
     y = y + 1
-    print("[4] Abortar")
+    print("[4] Abortar Operacion")
     y = y + 1
     print("[5] Estado de Red")
     y = y + 2
@@ -109,7 +112,7 @@ function NuclearControl:requestAuth()
                 return self.state.authorized
             end
         elseif event == "timer" and p1 == timeout then
-            print("Timeout")
+            print("Timeout - Sin respuesta")
             return false
         end
     end
@@ -123,7 +126,7 @@ function NuclearControl:armSystem()
     
     self.state.launchArmed = true
     self.state.status = self.STATUS.ARMED
-    print("Sistema armado")
+    print("Sistema armado correctamente")
     
     if peripheral.find("redstone") then
         redstone.setOutput("back", true)
@@ -143,7 +146,7 @@ function NuclearControl:initiateLaunch()
     print("Contando...")
     
     for i = 10, 1, -1 do
-        term.setCursorPos(2, 20)
+        term.setCursorPos(2, 18)
         term.clearLine()
         term.setTextColor(colors.red)
         print(">>> " .. i .. " <<<")

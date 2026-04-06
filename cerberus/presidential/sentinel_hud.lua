@@ -2,15 +2,15 @@
     SENTINEL HUD - Panel de Control Central
     CERBERUS OPS - Presidential System
     Nivel de Seguridad: 2 (AMARILLO)
-    Versión: 2.0.0
+    Versión: 2.1.0
 ]]
 
 local SentinelHUD = {
     systems = {
-        {id = "NUCLEAR", name = "Control Nuclear", status = "OFFLINE", channel = 101},
-        {id = "MSG", name = "Mensajeria", status = "OFFLINE", channel = 102},
-        {id = "DOCS", name = "Documentos", status = "OFFLINE", channel = 103},
-        {id = "AUTH", name = "Autenticacion", status = "OFFLINE", channel = 100}
+        {id = "NUCLEAR", name = "Control Nuclear", status = "OFF?", channel = 101},
+        {id = "MSG", name = "Mensajeria", status = "OFF?", channel = 102},
+        {id = "DOCS", name = "Documentos", status = "OFF?", channel = 103},
+        {id = "AUTH", name = "Autenticacion", status = "OFF?", channel = 100}
     }
 }
 
@@ -46,7 +46,8 @@ end
 
 function SentinelHUD:checkAllSystems()
     for _, system in ipairs(self.systems) do
-        system.status = self:pingSystem(system.channel) and "ONLINE" or "OFFLINE"
+        local online = self:pingSystem(system.channel)
+        system.status = online and "ONLINE" or "OFFLINE"
     end
 end
 
@@ -56,12 +57,15 @@ function SentinelHUD:draw()
     term.setBackgroundColor(colors.black)
     term.clear()
     
+    -- Header
     term.setBackgroundColor(colors.blue)
     term.setCursorPos(1, 1)
     term.write(string.rep(" ", w))
     term.setCursorPos(1, 2)
     local title = "SENTINEL HUD - PANEL DE CONTROL CENTRAL"
-    term.setCursorPos(math.floor((w - #title) / 2), 2)
+    local x = math.floor((w - #title) / 2)
+    if x < 1 then x = 1 end
+    term.setCursorPos(x, 2)
     term.write(title)
     term.setCursorPos(1, 3)
     term.write(string.rep(" ", w))
@@ -71,33 +75,34 @@ function SentinelHUD:draw()
     
     local y = 5
     term.setCursorPos(2, y)
-    term.write("════════════════════════════════════════════════════════════")
+    term.write("================================================")
     y = y + 1
     term.setCursorPos(2, y)
     term.write("ESTADO DEL SERVIDOR CENTRAL")
     y = y + 1
     term.setCursorPos(2, y)
-    term.write("════════════════════════════════════════════════════════════")
+    term.write("================================================")
     y = y + 2
     
     term.setCursorPos(2, y)
-    print(string.format("%-12s %-25s %-8s", "ID", "NOMBRE", "ESTADO"))
+    print(string.format("%-12s %-25s %-10s", "ID", "NOMBRE", "ESTADO"))
     y = y + 1
-    term.write(string.rep("─", 50))
+    term.setCursorPos(2, y)
+    term.write("------------------------------------------------")
     y = y + 1
     
     for _, sys in ipairs(self.systems) do
         term.setCursorPos(2, y)
         local color = sys.status == "ONLINE" and colors.green or colors.gray
         term.setTextColor(color)
-        print(string.format("%-12s %-25s %-8s", sys.id, sys.name, sys.status))
+        print(string.format("%-12s %-25s %-10s", sys.id, sys.name, sys.status))
         y = y + 1
     end
     
     y = y + 1
     term.setTextColor(colors.white)
     term.setCursorPos(2, y)
-    term.write("════════════════════════════════════════════════════════════")
+    term.write("================================================")
     y = y + 2
     
     term.setCursorPos(2, y)
@@ -112,15 +117,14 @@ function SentinelHUD:draw()
     y = h - 4
     term.setCursorPos(2, y)
     term.setTextColor(colors.gray)
-    term.write(string.rep("─", w - 4))
+    term.write("------------------------------------------------")
     y = y + 1
     
     local mem = math.floor(computer.freeMemory() / 1024)
     local total = math.floor(computer.totalMemory() / 1024)
-    local uptime = os.time()
     term.setCursorPos(2, y)
     term.setTextColor(colors.white)
-    print(string.format("ID: %d | RAM: %d/%d KB | Ticks: %d", os.getComputerID(), mem, total, uptime))
+    print(string.format("ID: %d | RAM: %d/%d KB", os.getComputerID(), mem, total))
     
     y = y + 1
     term.setCursorPos(2, y)
@@ -130,7 +134,7 @@ function SentinelHUD:draw()
     y = y + 1
     term.setCursorPos(2, y)
     term.setTextColor(colors.lime)
-    print("CERBERUS OPS v2.0.0")
+    print("CERBERUS OPS v2.1.0")
 end
 
 function SentinelHUD:run()

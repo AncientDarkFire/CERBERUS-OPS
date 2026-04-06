@@ -2,7 +2,7 @@
     Secure Documents System
     CERBERUS OPS - Presidential System
     Nivel de Seguridad: 3 (ROJO)
-    Versión: 2.0.0
+    Versión: 2.1.0
 ]]
 
 local SecureDocs = {
@@ -10,7 +10,7 @@ local SecureDocs = {
         {name = "VERDE", level = 1, color = colors.green},
         {name = "AMARILLO", level = 2, color = colors.yellow},
         {name = "ROJO", level = 3, color = colors.red},
-        {name = "NEGRO", level = 4, color = colors.black}
+        {name = "NEGRO", level = 4, color = colors.white}
     },
     config = {folder = "/cerberus/docs"},
     documents = {}
@@ -116,12 +116,15 @@ function SecureDocs:drawList(docs, page)
     term.setBackgroundColor(colors.black)
     term.clear()
     
+    -- Header
     term.setBackgroundColor(colors.blue)
     term.setCursorPos(1, 1)
     term.write(string.rep(" ", w))
     term.setCursorPos(1, 2)
     local title = "DOCUMENTOS CLASIFICADOS - CERBERUS"
-    term.setCursorPos(math.floor((w - #title) / 2), 2)
+    local x = math.floor((w - #title) / 2)
+    if x < 1 then x = 1 end
+    term.setCursorPos(x, 2)
     term.write(title)
     term.setCursorPos(1, 3)
     term.write(string.rep(" ", w))
@@ -131,9 +134,10 @@ function SecureDocs:drawList(docs, page)
     
     local y = 5
     term.setCursorPos(2, y)
-    print(string.format("%-6s %-8s %-30s", "IDX", "NIVEL", "TITULO"))
+    print(string.format("%-6s %-10s %-30s", "IDX", "NIVEL", "TITULO"))
     y = y + 1
-    term.write(string.rep("─", 50))
+    term.setCursorPos(2, y)
+    term.write(string.rep("-", 50))
     y = y + 1
     
     local startIdx = (page - 1) * perPage + 1
@@ -143,7 +147,7 @@ function SecureDocs:drawList(docs, page)
         local doc = docs[i]
         term.setCursorPos(2, y)
         term.setTextColor(self.SECURITY_LEVELS[doc.securityLevel].color)
-        print(string.format("%-6d %-8s %-30s", i, doc.securityName, doc.title:sub(1, 30)))
+        print(string.format("%-6d %-10s %-30s", i, doc.securityName, doc.title:sub(1, 30)))
         y = y + 1
     end
     
@@ -167,9 +171,11 @@ function SecureDocs:showDocument(idx, docs)
     term.setBackgroundColor(colors.black)
     term.clear()
     
-    term.setBackgroundColor(self.SECURITY_LEVELS[doc.securityLevel].color)
+    local secLevel = self.SECURITY_LEVELS[doc.securityLevel]
+    term.setBackgroundColor(secLevel.color)
     term.setCursorPos(1, 1)
-    term.write(" " .. doc.securityName .. ": " .. doc.title)
+    local header = " " .. secLevel.name .. ": " .. doc.title
+    term.write(header .. string.rep(" ", w - #header))
     
     term.setBackgroundColor(colors.black)
     term.setTextColor(colors.white)
@@ -194,7 +200,7 @@ function SecureDocs:showDocument(idx, docs)
         
         term.setCursorPos(2, h)
         term.setTextColor(colors.gray)
-        print("[Q] Cerrar")
+        print("[Q] Cerrar | [Up/Down] Scroll")
         
         local event, key = os.pullEvent("key")
         

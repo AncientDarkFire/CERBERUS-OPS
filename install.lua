@@ -1,6 +1,6 @@
 --[[
-    CERBERUS OPS - Script de Instalación
-    Versión: 2.0.0
+    CERBERUS OPS - Script de Instalacion
+    Version: 2.1.0
     
     Uso:
         wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install.lua install.lua
@@ -8,7 +8,7 @@
 ]]
 
 local Installer = {
-    VERSION = "2.0.0",
+    VERSION = "2.1.0",
     BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus",
     
     FILES = {
@@ -17,10 +17,10 @@ local Installer = {
         {path = "/cerberus/core/crypto.lua", desc = "Sistema de cifrado"},
         {path = "/cerberus/core/network.lua", desc = "Sistema de red"},
         {path = "/cerberus/lib/ui.lua", desc = "Componentes UI"},
-        {path = "/cerberus/config/system.lua", desc = "Configuración"},
+        {path = "/cerberus/config/system.lua", desc = "Configuracion"},
         {path = "/cerberus/presidential/sentinel_hud.lua", desc = "SENTINEL HUD"},
         {path = "/cerberus/presidential/nuclear_control.lua", desc = "Control Nuclear"},
-        {path = "/cerberus/presidential/secure_msg.lua", desc = "Mensajería Segura"},
+        {path = "/cerberus/presidential/secure_msg.lua", desc = "Mensajeria Segura"},
         {path = "/cerberus/presidential/secure_docs.lua", desc = "Documentos Clasificados"}
     }
 }
@@ -29,12 +29,10 @@ function Installer:printHeader()
     term.setBackgroundColor(colors.black)
     term.clear()
     term.setTextColor(colors.green)
-    print("╔═══════════════════════════════════════════════════════════════╗")
-    print("║                                                               ║")
-    print("║              CERBERUS OPS - INSTALADOR v" .. self.VERSION)
-    print("║                   Red Presidencial System                     ║")
-    print("║                                                               ║")
-    print("╚═══════════════════════════════════════════════════════════════╝")
+    print("============================================")
+    print("       CERBERUS OPS - INSTALADOR v" .. self.VERSION)
+    print("         Red Presidencial System")
+    print("============================================")
     print("")
 end
 
@@ -58,7 +56,7 @@ function Installer:createDirs()
         end
     end
     
-    print("  ✓ OK")
+    print("  OK")
     print("")
 end
 
@@ -79,10 +77,10 @@ function Installer:downloadFile(url, path)
         local file = fs.open(path, "w")
         file.write(response)
         file.close()
-        print("    ✓ OK")
+        print("    OK")
         return true
     else
-        print("    ✗ Error: " .. tostring(response))
+        print("    Error: " .. tostring(response))
         return false
     end
 end
@@ -108,9 +106,9 @@ function Installer:installFiles()
     end
     
     print("")
-    print("  ✓ Instalados: " .. installed)
+    print("  Instalados: " .. installed)
     if failed > 0 then
-        print("  ✗ Fallidos: " .. failed)
+        print("  Fallidos: " .. failed)
     end
     print("")
 end
@@ -122,9 +120,9 @@ function Installer:createQuickScripts()
 -- CERBERUS OPS - Diagnostico
 term.clear()
 term.setTextColor(colors.green)
-print("═══════════════════════════════════════")
+print("============================================")
 print("    CERBERUS OPS - DIAGNOSTICO")
-print("═══════════════════════════════════════")
+print("============================================")
 print("")
 print("ID: " .. os.getComputerID())
 print("RAM: " .. math.floor(computer.freeMemory()/1024) .. " KB")
@@ -139,12 +137,11 @@ print("Monitor: " .. (peripheral.find("monitor") and "OK" or "NO"))
 print("")
 if fs.exists("/cerberus") then
     print("/cerberus: INSTALADO")
-    print("Sistemas: " .. #peripheral.getNames())
 else
     print("/cerberus: NO INSTALADO")
 end
 print("")
-print("═══════════════════════════════════════")
+print("============================================")
 ]]
     
     local f = fs.open("/cerberus/diag.lua", "w")
@@ -164,21 +161,19 @@ function Installer:run()
     self:installFiles()
     self:createQuickScripts()
     
-    print("═══════════════════════════════════════")
+    print("============================================")
     term.setTextColor(colors.lime)
     print("  INSTALACION COMPLETADA")
     term.setTextColor(colors.green)
-    print("═══════════════════════════════════════")
+    print("============================================")
     print("")
-    print("Ejecutar: reboot")
+    print("Reiniciar con: reboot")
     print("")
     print("Sistemas disponibles:")
-    print("  lua /cerberus/presidential/sentinel_hud")
-    print("  lua /cerberus/presidential/nuclear_control")
-    print("  lua /cerberus/presidential/secure_msg")
-    print("  lua /cerberus/presidential/secure_docs")
-    print("")
-    print("O desde el menu principal: hud, nuclear, msg, docs")
+    print("  hud      - Panel SENTINEL")
+    print("  nuclear  - Control Nuclear")
+    print("  msg      - Mensajeria Segura")
+    print("  docs     - Documentos Clasificados")
     print("")
 end
 

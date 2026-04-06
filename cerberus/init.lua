@@ -1,11 +1,11 @@
 --[[
     CERBERUS OPS - Boot Sequence
-    Versión: 2.0.0
+    Versión: 2.1.0
 ]]
 
 local System = {
     NAME = "CERBERUS OPS",
-    VERSION = "2.0.0",
+    VERSION = "2.1.0",
     SYSTEM_ID = os.getComputerID()
 }
 
@@ -16,12 +16,10 @@ local function bootSequence()
     term.setTextColor(colors.green)
     term.clear()
     
-    print("╔══════════════════════════════════════════════════════════════╗")
-    print("║                                                              ║")
-    print("║                    CERBERUS OPS v" .. System.VERSION)
-    print("║                  RED PRESIDENCIAL SYSTEM                    ║")
-    print("║                                                              ║")
-    print("╚══════════════════════════════════════════════════════════════╝")
+    print("============================================")
+    print("        CERBERUS OPS v" .. System.VERSION)
+    print("      RED PRESIDENCIAL SYSTEM")
+    print("============================================")
     print("")
     print("Sistema ID: " .. System.SYSTEM_ID)
     print("")
@@ -47,9 +45,9 @@ local function bootSequence()
     
     term.setTextColor(colors.lime)
     print("")
-    print("═══════════════════════════════════════════════════════════════")
-    print("                    SISTEMA LISTO                            ")
-    print("═══════════════════════════════════════════════════════════════")
+    print("============================================")
+    print("              SISTEMA LISTO")
+    print("============================================")
     print("")
     print("Comandos:")
     print("  help     - Mostrar ayuda")
@@ -60,61 +58,143 @@ local function bootSequence()
     term.setTextColor(colors.white)
 end
 
+local function showHelp()
+    print("")
+    print("=== COMANDOS DISPONIBLES ===")
+    print("")
+    print("  General:")
+    print("    help     - Esta ayuda")
+    print("    status   - Estado del sistema")
+    print("    clear    - Limpiar pantalla")
+    print("    reboot   - Reiniciar computadora")
+    print("    shutdown - Apagar computadora")
+    print("")
+    print("  Sistemas:")
+    print("    hud      - Panel SENTINEL (Control Central)")
+    print("    nuclear  - Panel de Control Nuclear")
+    print("    msg      - Sistema de Mensajeria Segura")
+    print("    docs     - Sistema de Documentos Clasificados")
+    print("")
+    print("  Utilidades:")
+    print("    diag     - Diagnostico rapido")
+    print("    peripherals - Ver perifericos")
+    print("")
+end
+
+local function showStatus()
+    local mem = math.floor(computer.freeMemory() / 1024)
+    local total = math.floor(computer.totalMemory() / 1024)
+    local uptime = math.floor(computer.uptime())
+    
+    print("")
+    print("=== ESTADO DEL SISTEMA ===")
+    print("  ID: " .. System.SYSTEM_ID)
+    print("  Version: " .. System.VERSION)
+    print("  Memoria: " .. mem .. "KB / " .. total .. "KB")
+    print("  Uptime: " .. uptime .. " segundos")
+    print("  Perifericos: " .. #peripheral.getNames())
+    print("")
+    
+    local modem = peripheral.find("modem")
+    print("  Modem: " .. (modem and "OK" or "NO DETECTADO"))
+    
+    local monitor = peripheral.find("monitor")
+    print("  Monitor: " .. (monitor and "OK" or "NO DETECTADO"))
+    print("")
+end
+
+local function showPeripherals()
+    print("")
+    print("=== PERIFERICOS ===")
+    print("")
+    
+    local names = peripheral.getNames()
+    for _, name in ipairs(names) do
+        local ptype = peripheral.getType(name)
+        print("  " .. name .. " -> " .. ptype)
+    end
+    
+    if #names == 0 then
+        print("  (ninguno)")
+    end
+    print("")
+end
+
+local function runSystem(systemName)
+    local paths = {
+        hud = "/cerberus/presidential/sentinel_hud",
+        nuclear = "/cerberus/presidential/nuclear_control",
+        msg = "/cerberus/presidential/secure_msg",
+        docs = "/cerberus/presidential/secure_docs",
+        diag = "/cerberus/diag"
+    }
+    
+    local path = paths[systemName]
+    if path then
+        if fs.exists(path .. ".lua") then
+            print("Ejecutando " .. systemName .. "...")
+            sleep(0.5)
+            shell.run("lua " .. path)
+        else
+            print("Error: Sistema no encontrado - " .. path .. ".lua")
+        end
+    else
+        print("Sistema desconocido: " .. systemName)
+    end
+end
+
 local function mainMenu()
     while true do
         term.setTextColor(colors.green)
         write("CERBERUS> ")
         
         local input = read()
-        local args = {}
-        for arg in input:gmatch("%S+") do
-            table.insert(args, arg)
-        end
+        local trimmed = input:gsub("^%s+", ""):gsub("%s+$", "")
         
-        local cmd = args[1]
-        
-        if cmd == "help" then
-            print("Comandos: help, status, clear, reboot, shutdown")
-            print("Sistemas:")
-            print("  hud        - Panel SENTINEL")
-            print("  nuclear    - Control Nuclear")
-            print("  msg        - Mensajería Segura")
-            print("  docs       - Documentos")
+        if #trimmed == 0 then
+            -- nada
+        elseif trimmed == "help" or trimmed == "?" then
+            showHelp()
             
-        elseif cmd == "status" then
-            local mem = math.floor(computer.freeMemory() / 1024)
-            local total = math.floor(computer.totalMemory() / 1024)
-            print("ID: " .. System.SYSTEM_ID)
-            print("Memoria: " .. mem .. "KB / " .. total .. "KB")
+        elseif trimmed == "status" or trimmed == "info" then
+            showStatus()
             
-        elseif cmd == "clear" then
+        elseif trimmed == "clear" or trimmed == "cls" then
             term.clear()
             
-        elseif cmd == "reboot" then
+        elseif trimmed == "reboot" then
+            print("Reiniciando...")
+            sleep(0.5)
             os.reboot()
             
-        elseif cmd == "shutdown" then
+        elseif trimmed == "shutdown" or trimmed == "exit" then
+            print("Apagando sistema...")
+            sleep(0.5)
             os.shutdown()
             
-        elseif cmd == "hud" then
-            shell.openTab("lua /cerberus/presidential/sentinel_hud")
+        elseif trimmed == "hud" then
+            runSystem("hud")
             
-        elseif cmd == "nuclear" then
-            shell.openTab("lua /cerberus/presidential/nuclear_control")
+        elseif trimmed == "nuclear" then
+            runSystem("nuclear")
             
-        elseif cmd == "msg" then
-            shell.openTab("lua /cerberus/presidential/secure_msg")
+        elseif trimmed == "msg" or trimmed == "message" then
+            runSystem("msg")
             
-        elseif cmd == "docs" then
-            shell.openTab("lua /cerberus/presidential/secure_docs")
+        elseif trimmed == "docs" or trimmed == "documents" then
+            runSystem("docs")
             
-        elseif cmd == nil then
-            -- nada
+        elseif trimmed == "diag" or trimmed == "diagnostic" then
+            runSystem("diag")
+            
+        elseif trimmed == "peripherals" or trimmed == "peri" then
+            showPeripherals()
             
         else
             term.setTextColor(colors.red)
-            print("Comando desconocido: " .. cmd)
+            print("Comando desconocido: " .. trimmed)
             term.setTextColor(colors.white)
+            print("Escribe 'help' para ver comandos disponibles")
         end
     end
 end

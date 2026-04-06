@@ -2,7 +2,7 @@
     Secure Messaging System
     CERBERUS OPS - Presidential System
     Nivel de Seguridad: 3 (ROJO)
-    Versión: 2.0.0
+    Versión: 2.1.0
 ]]
 
 local SecureMsg = {
@@ -61,12 +61,15 @@ function SecureMsg:drawInbox()
     term.setBackgroundColor(colors.black)
     term.clear()
     
+    -- Header
     term.setBackgroundColor(colors.blue)
     term.setCursorPos(1, 1)
     term.write(string.rep(" ", w))
     term.setCursorPos(1, 2)
     local title = "BANDEJA DE ENTRADA - MENSAJES SEGUROS"
-    term.setCursorPos(math.floor((w - #title) / 2), 2)
+    local x = math.floor((w - #title) / 2)
+    if x < 1 then x = 1 end
+    term.setCursorPos(x, 2)
     term.write(title)
     term.setCursorPos(1, 3)
     term.write(string.rep(" ", w))
