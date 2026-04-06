@@ -120,6 +120,10 @@ function Installer:createDirsOnDisk(basePath)
         "/cerberus/docs"
     }
     
+    if fs.exists(basePath .. "/cerberus") then
+        fs.delete(basePath .. "/cerberus")
+    end
+    
     for _, dir in ipairs(dirs) do
         local fullPath = basePath .. dir
         if not fs.exists(fullPath) then
@@ -130,6 +134,11 @@ end
 
 function Installer:writeFileOnDisk(basePath, relativePath, content)
     local fullPath = basePath .. relativePath
+    
+    if fs.exists(fullPath) then
+        fs.delete(fullPath)
+    end
+    
     local file = fs.open(fullPath, "w")
     if file then
         file.write(content)
@@ -181,7 +190,7 @@ print("    CERBERUS OPS - DIAGNOSTICO")
 print("============================================")
 print("")
 print("ID: " .. os.computerID())
-print("RAM Total: " .. math.floor(computer.totalMemory()/1024) .. " KB")
+print("Uptime: " .. math.floor(os.clock()) .. " segundos")
 print("")
 print("Perifericos:")
 for _, n in ipairs(peripheral.getNames()) do
@@ -201,6 +210,11 @@ print("============================================")
 ]]
     
     local fullPath = diskPath .. "/cerberus/diag.lua"
+    
+    if fs.exists(fullPath) then
+        fs.delete(fullPath)
+    end
+    
     local file = fs.open(fullPath, "w")
     if file then
         file.write(diag)
@@ -243,6 +257,11 @@ end
 ]]
     
     local fullPath = diskPath .. "/autorun.lua"
+    
+    if fs.exists(fullPath) then
+        fs.delete(fullPath)
+    end
+    
     local file = fs.open(fullPath, "w")
     if file then
         file.write(autorun)

@@ -120,10 +120,10 @@ function SentinelHUD:draw()
     term.write("------------------------------------------------")
     y = y + 1
     
-    local total = math.floor(computer.totalMemory() / 1024)
+    local uptime = math.floor(os.clock())
     term.setCursorPos(2, y)
     term.setTextColor(colors.white)
-    print(string.format("ID: %d | RAM: %d KB", os.computerID(), total))
+    print(string.format("ID: %d | Uptime: %d s", os.computerID(), uptime))
     
     y = y + 1
     term.setCursorPos(2, y)

@@ -49,14 +49,19 @@ peripheral.wrap("top")
 ### Computer API
 ```lua
 -- Control de computadora
-computer.shutdown()
-computer.reboot()
-computer.uptime()
-computer.totalMemory()
-computer.freeMemory()
+computer.shutdown()  -- Apagar computadora (como peripheral)
+computer.reboot()    -- Reiniciar computadora (como peripheral)
+
+-- No existen computer.uptime(), computer.totalMemory(), computer.freeMemory()
+-- en CC: Tweaked moderno. Usar en su lugar:
+os.clock()          -- Tiempo de ejecución en segundos (similar a uptime)
+os.getComputerID()  -- ID de la computadora
 
 -- Tiempo
+os.clock()          -- Tiempo de ejecución en segundos (similar a uptime)
+os.getComputerID()  -- ID de la computadora
 os.sleep(segundos)
+os.time()  -- Retorna tiempo en ticks
 os.time()  -- Retorna tiempo en ticks
 os.date("!*t")  -- Retorna tabla con fecha/hora real
 

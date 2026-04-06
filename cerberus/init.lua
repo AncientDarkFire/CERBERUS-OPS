@@ -111,14 +111,12 @@ local function showHelp()
 end
 
 local function showStatus()
-    local total = math.floor(computer.totalMemory() / 1024)
-    local uptime = math.floor(computer.uptime())
+    local uptime = math.floor(os.clock())
     
     print("")
     print("=== ESTADO DEL SISTEMA ===")
     print("  ID: " .. System.SYSTEM_ID)
     print("  Version: " .. System.VERSION)
-    print("  Memoria Total: " .. total .. "KB")
     print("  Uptime: " .. uptime .. " segundos")
     print("  Perifericos: " .. #peripheral.getNames())
     print("")
