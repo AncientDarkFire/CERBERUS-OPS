@@ -12,7 +12,7 @@ local SecureMsg = {
 local modem = nil
 local crypto = nil
 local inbox = {}
-local myId = os.getComputerID()
+local myId = os.computerID()
 
 function SecureMsg:init()
     self.modem = peripheral.find("modem")

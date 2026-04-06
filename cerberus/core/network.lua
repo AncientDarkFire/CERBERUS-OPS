@@ -9,7 +9,7 @@ local Network = {
 }
 
 local modem = nil
-local myId = os.getComputerID()
+local myId = os.computerID()
 
 function Network:init(channel)
     self.modem = peripheral.find("modem")

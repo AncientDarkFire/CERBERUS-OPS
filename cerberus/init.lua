@@ -6,7 +6,7 @@
 local System = {
     NAME = "CERBERUS OPS",
     VERSION = "2.1.0",
-    SYSTEM_ID = os.getComputerID()
+    SYSTEM_ID = os.computerID()
 }
 
 _G.CERBERUS = System
@@ -82,7 +82,6 @@ local function showHelp()
 end
 
 local function showStatus()
-    local mem = math.floor(computer.freeMemory() / 1024)
     local total = math.floor(computer.totalMemory() / 1024)
     local uptime = math.floor(computer.uptime())
     
@@ -90,7 +89,7 @@ local function showStatus()
     print("=== ESTADO DEL SISTEMA ===")
     print("  ID: " .. System.SYSTEM_ID)
     print("  Version: " .. System.VERSION)
-    print("  Memoria: " .. mem .. "KB / " .. total .. "KB")
+    print("  Memoria Total: " .. total .. "KB")
     print("  Uptime: " .. uptime .. " segundos")
     print("  Perifericos: " .. #peripheral.getNames())
     print("")

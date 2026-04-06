@@ -27,7 +27,7 @@ end
 function SentinelHUD:pingSystem(channel)
     if not self.modem then return false end
     
-    self.modem.transmit(channel, 0, {type = "PING", from = os.getComputerID()})
+    self.modem.transmit(channel, 0, {type = "PING", from = os.computerID()})
     
     local timeout = os.startTimer(2)
     while true do
@@ -120,11 +120,10 @@ function SentinelHUD:draw()
     term.write("------------------------------------------------")
     y = y + 1
     
-    local mem = math.floor(computer.freeMemory() / 1024)
     local total = math.floor(computer.totalMemory() / 1024)
     term.setCursorPos(2, y)
     term.setTextColor(colors.white)
-    print(string.format("ID: %d | RAM: %d/%d KB", os.getComputerID(), mem, total))
+    print(string.format("ID: %d | RAM: %d KB", os.computerID(), total))
     
     y = y + 1
     term.setCursorPos(2, y)

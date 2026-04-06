@@ -88,7 +88,7 @@ function NuclearControl:drawPanel()
     
     term.setCursorPos(2, h - 2)
     term.setTextColor(colors.gray)
-    print("[Q] Salir | ID: " .. os.getComputerID())
+    print("[Q] Salir | ID: " .. os.computerID())
 end
 
 function NuclearControl:requestAuth()
@@ -98,7 +98,7 @@ function NuclearControl:requestAuth()
     end
     
     print("Enviando solicitud a Central...")
-    self.modem.transmit(100, 101, {type = "AUTH_REQUEST", system = "NUCLEAR", id = os.getComputerID()})
+    self.modem.transmit(100, 101, {type = "AUTH_REQUEST", system = "NUCLEAR", id = os.computerID()})
     
     local timeout = os.startTimer(30)
     while true do
