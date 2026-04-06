@@ -3,157 +3,69 @@
 
 ---
 
-## 📋 ÍNDICE
-
-1. [Métodos de Descarga](#métodos-de-descarga)
-2. [Script de Instalación](#script-de-instalación)
-3. [Archivos Individuales](#archivos-individuales)
-4. [Pastebin Codes](#pastebin-codes)
-
----
-
-## MÉTODOS DE DESCARGA
-
-### Método 1: Pastebin (Recomendado)
+## 📦 INSTALACIÓN
 
 ```bash
-pastebin get <codigo> <nombre_archivo>
-```
-
-**Ventajas:** Rápido, no requiere servidor externo
-
-### Método 2: HTTP/WGET
-
-```bash
-wget <url_completa>
-```
-
-**Ventajas:** Directo desde GitHub
-
-### Método 3: GitHub Raw
-
-```bash
-wget https://raw.githubusercontent.com/USUARIO/CERBERUS-OPS/main/<ruta>
-```
-
----
-
-## SCRIPT DE INSTALACIÓN
-
-### Opción A: Pastebin
-```bash
-pastebin get [CODIGO_INSTALL] install.lua
-install
-```
-
-### Opción B: GitHub
-```bash
-wget https://raw.githubusercontent.com/USUARIO/CERBERUS-OPS/main/install.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install.lua install.lua
 install
 ```
 
 ---
 
-## ARCHIVOS INDIVIDUALES
+## 🔗 ARCHIVOS INDIVIDUALES
 
-### Sistema Core
+### Boot y Core
 
-| Archivo | Pastebin | GitHub Raw |
-|---------|----------|------------|
-| install.lua | `PASTEBIN_CODE` | `URL_GITHUB/install.lua` |
-| /cerberus/core/systems/logger.lua | `PASTEBIN_CODE` | `URL_GITHUB/src/core/systems/logger.lua` |
-| /cerberus/core/systems/crypto.lua | `PASTEBIN_CODE` | `URL_GITHUB/src/core/systems/crypto.lua` |
-| /cerberus/core/systems/network.lua | `PASTEBIN_CODE` | `URL_GITHUB/src/core/systems/network.lua` |
+| Archivo | URL |
+|---------|-----|
+| init.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/init.lua` |
+| logger.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/logger.lua` |
+| crypto.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/crypto.lua` |
+| network.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/network.lua` |
 
-### Sistema Presidencial
+### Presidential
 
-| Archivo | Pastebin | GitHub Raw |
-|---------|----------|------------|
-| /cerberus/presidential/control/nuclear_control.lua | `PASTEBIN_CODE` | `URL_GITHUB/src/presidential/control/nuclear_control.lua` |
-| /cerberus/presidential/control/secure_msg.lua | `PASTEBIN_CODE` | `URL_GITHUB/src/presidential/control/secure_msg.lua` |
-| /cerberus/presidential/control/secure_docs.lua | `PASTEBIN_CODE` | `URL_GITHUB/src/presidential/control/secure_docs.lua` |
-| /cerberus/presidential/control/sentinel_hud.lua | `PASTEBIN_CODE` | `URL_GITHUB/src/presidential/control/sentinel_hud.lua` |
+| Archivo | URL |
+|---------|-----|
+| sentinel_hud.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/presidential/sentinel_hud.lua` |
+| nuclear_control.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/presidential/nuclear_control.lua` |
+| secure_msg.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/presidential/secure_msg.lua` |
+| secure_docs.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/presidential/secure_docs.lua` |
 
-### Templates y UI
+### Templates
 
-| Archivo | Pastebin | GitHub Raw |
-|---------|----------|------------|
-| /cerberus/templates/ui/components.lua | `PASTEBIN_CODE` | `URL_GITHUB/src/templates/ui/components.lua` |
-| /cerberus/init.lua | `PASTEBIN_CODE` | `URL_GITHUB/src/templates/boot/init.lua` |
-| /cerberus/config/system.lua | `PASTEBIN_CODE` | `URL_GITHUB/src/templates/config/system.lua` |
-
----
-
-## PASTEBIN CODES
-
-> ⚠️ **NOTA:** Los códigos de Pastebin deben ser reemplazados con los códigos reales después de subir los archivos.
-
-```
-┌─────────────────────────────────────┬────────────────────┐
-│ ARCHIVO                             │ PASTEBIN CODE      │
-├─────────────────────────────────────┼────────────────────┤
-│ install.lua                         │ XXXXXXXXX          │
-├─────────────────────────────────────┼────────────────────┤
-│ /cerberus/core/systems/logger.lua   │ XXXXXXXXX          │
-│ /cerberus/core/systems/crypto.lua   │ XXXXXXXXX          │
-│ /cerberus/core/systems/network.lua │ XXXXXXXXX          │
-├─────────────────────────────────────┼────────────────────┤
-│ /cerberus/presidential/control/    │                    │
-│   nuclear_control.lua               │ XXXXXXXXX          │
-│   secure_msg.lua                    │ XXXXXXXXX          │
-│   secure_docs.lua                   │ XXXXXXXXX          │
-│   sentinel_hud.lua                  │ XXXXXXXXX          │
-├─────────────────────────────────────┼────────────────────┤
-│ /cerberus/templates/ui/components   │ XXXXXXXXX          │
-│ /cerberus/init.lua                  │ XXXXXXXXX          │
-│ /cerberus/config/system.lua         │ XXXXXXXXX          │
-└─────────────────────────────────────┴────────────────────┘
-```
+| Archivo | URL |
+|---------|-----|
+| ui.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/lib/ui.lua` |
+| system.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/config/system.lua` |
 
 ---
 
-## GUÍA RÁPIDA DE INSTALACIÓN
+## 📋 INSTALACIÓN MANUAL
 
-### Paso 1: Descargar script de instalación
-
-En la terminal de CC: Tweaked:
 ```bash
-pastebin get XXXXXXXXX install.lua
+# Crear estructura
+mkdir /cerberus/core
+mkdir /cerberus/lib
+mkdir /cerberus/presidential
+mkdir /cerberus/config
+
+# Descargar archivos
+wget <URL> <DESTINO>
 ```
 
-### Paso 2: Ejecutar instalador
+### Ejemplo:
 ```bash
-install
-```
-
-### Paso 3: Seleccionar tipo de instalación
-```
-[1] Automática (recomendado)
-[2] Manual (muestra URLs)
-[3] Solo crear estructura
-```
-
-### Paso 4: Reiniciar
-```bash
-reboot
+mkdir /cerberus/core
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/logger.lua /cerberus/core/logger.lua
 ```
 
 ---
 
-## SOLUCIÓN DE PROBLEMAS
+## ⚠️ CONFIGURAR REPOSITORIO
 
-### Error: "HTTP request failed"
-
-El servidor no está disponible o no tienes conexión HTTP. Usa Pastebin en su lugar.
-
-### Error: "Too long without yielding"
-
-El archivo es muy grande. Divide la descarga o usa un servicio de compresión.
-
-### Error: "Not enough memory"
-
-La computadora no tiene suficiente RAM. Cierra otros programas o usa una Computadora Avanzada.
+Para usar tu propio repositorio, cambia `AncientDarkFire` por tu usuario en las URLs.
 
 ---
 
-*Última actualización: 2026-04-05*
+*Última actualización: 2026-04-06*

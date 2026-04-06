@@ -1,15 +1,12 @@
 --[[
     CERBERUS OPS - Boot Sequence
-    Sistema: init.lua
-    Versión: 1.0.0
+    Versión: 2.0.0
 ]]
 
 local System = {
     NAME = "CERBERUS OPS",
-    VERSION = "1.0.0",
-    BUILD = "2026.04.05",
-    SYSTEM_ID = os.getComputerID(),
-    DEBUG = false
+    VERSION = "2.0.0",
+    SYSTEM_ID = os.getComputerID()
 }
 
 _G.CERBERUS = System
@@ -22,60 +19,50 @@ local function bootSequence()
     print("╔══════════════════════════════════════════════════════════════╗")
     print("║                                                              ║")
     print("║                    CERBERUS OPS v" .. System.VERSION)
-    print("║                  RED PRESIDENCIAL SYSTEM                      ║")
+    print("║                  RED PRESIDENCIAL SYSTEM                    ║")
     print("║                                                              ║")
     print("╚══════════════════════════════════════════════════════════════╝")
     print("")
     print("Sistema ID: " .. System.SYSTEM_ID)
-    print("Build: " .. System.BUILD)
     print("")
     print("[BOOT] Inicializando...")
-    
     sleep(0.5)
     
-    -- Cargar package path
-    package.path = "/cerberus/core/?.lua;/cerberus/lib/?.lua;/cerberus/presidential/?.lua;" .. package.path
-    print("[OK] Paths de modulos configurados")
+    package.path = "/cerberus/core/?.lua;/cerberus/lib/?.lua;" .. package.path
+    print("[OK] Paths configurados")
     
     sleep(0.3)
     
-    -- Verificar periféricos
     local names = peripheral.getNames()
-    print("[OK] Perifericos detectados: " .. #names)
+    print("[OK] Perifericos: " .. #names)
     
-    -- Verificar modem
     local modem = peripheral.find("modem")
     if modem then
-        print("[OK] Modem de red encontrado")
+        print("[OK] Modem detectado")
         modem.open(100)
         print("[OK] Canal 100 abierto")
-    else
-        print("[WARN] No se detecto modem")
     end
     
     sleep(0.3)
     
-    -- Boot completo
     term.setTextColor(colors.lime)
     print("")
     print("═══════════════════════════════════════════════════════════════")
-    print("                    SISTEMA OPERATIVO                          ")
-    print("                      LISTO PARA USO                           ")
+    print("                    SISTEMA LISTO                            ")
     print("═══════════════════════════════════════════════════════════════")
     print("")
-    print("Comandos disponibles:")
+    print("Comandos:")
     print("  help     - Mostrar ayuda")
-    print("  shell    - Abrir shell")
-    print("  logout   - Cerrar sesion")
+    print("  status   - Estado del sistema")
+    print("  reboot   - Reiniciar")
+    print("  shutdown - Apagar")
     print("")
-    
     term.setTextColor(colors.white)
 end
 
 local function mainMenu()
     while true do
         term.setTextColor(colors.green)
-        term.setCursorPos(1, 1)
         write("CERBERUS> ")
         
         local input = read()
@@ -87,60 +74,42 @@ local function mainMenu()
         local cmd = args[1]
         
         if cmd == "help" then
-            print("Comandos disponibles:")
-            print("  help     - Esta ayuda")
-            print("  clear    - Limpiar pantalla")
-            print("  reboot   - Reiniciar sistema")
-            print("  shutdown - Apagar sistema")
-            print("  shell    - Abrir shell de sistema")
-            print("  status   - Estado del sistema")
-            print("  network  - Diagnostico de red")
+            print("Comandos: help, status, clear, reboot, shutdown")
+            print("Sistemas:")
+            print("  hud        - Panel SENTINEL")
+            print("  nuclear    - Control Nuclear")
+            print("  msg        - Mensajería Segura")
+            print("  docs       - Documentos")
+            
+        elseif cmd == "status" then
+            local mem = math.floor(computer.freeMemory() / 1024)
+            local total = math.floor(computer.totalMemory() / 1024)
+            print("ID: " .. System.SYSTEM_ID)
+            print("Memoria: " .. mem .. "KB / " .. total .. "KB")
             
         elseif cmd == "clear" then
             term.clear()
             
         elseif cmd == "reboot" then
-            print("Reiniciando...")
-            sleep(0.5)
             os.reboot()
             
-        elseif cmd == "shutdown" or cmd == "exit" then
-            print("Apagando sistema...")
-            sleep(0.5)
+        elseif cmd == "shutdown" then
             os.shutdown()
             
-        elseif cmd == "status" then
-            local mem = math.floor(computer.freeMemory() / 1024)
-            local total = math.floor(computer.totalMemory() / 1024)
-            local uptime = math.floor(computer.uptime())
+        elseif cmd == "hud" then
+            shell.openTab("lua /cerberus/presidential/sentinel_hud")
             
-            print("=== ESTADO DEL SISTEMA ===")
-            print("ID: " .. System.SYSTEM_ID)
-            print("Version: " .. System.VERSION)
-            print("Memoria: " .. mem .. "KB / " .. total .. "KB")
-            print("Uptime: " .. uptime .. "s")
-            print("===========================")
+        elseif cmd == "nuclear" then
+            shell.openTab("lua /cerberus/presidential/nuclear_control")
             
-        elseif cmd == "network" then
-            local modem = peripheral.find("modem")
-            if modem then
-                print("Modem: OK")
-            else
-                print("Modem: NO DETECTADO")
-            end
+        elseif cmd == "msg" then
+            shell.openTab("lua /cerberus/presidential/secure_msg")
             
-        elseif cmd == "shell" then
-            print("Abriendo shell...")
-            sleep(0.3)
-            shell.openTab("")
-            break
-            
-        elseif cmd == "logout" then
-            print("Sesion cerrada.")
-            break
+        elseif cmd == "docs" then
+            shell.openTab("lua /cerberus/presidential/secure_docs")
             
         elseif cmd == nil then
-            -- No hacer nada
+            -- nada
             
         else
             term.setTextColor(colors.red)

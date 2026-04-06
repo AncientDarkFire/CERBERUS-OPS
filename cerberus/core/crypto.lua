@@ -1,16 +1,10 @@
 --[[
     Crypto Module
     CERBERUS OPS - Core Module
-    Versión: 1.0.0
-    
-    Implementación de cifrado básico para Lua en CC: Tweaked.
-    ADVERTENCIA: No es criptografía de grado militar.
-    Usar para sistemas de juego, no datos reales sensibles.
+    Versión: 2.0.0
 ]]
 
-local Crypto = {
-    VERSION = "1.0.0"
-}
+local Crypto = {}
 
 function Crypto:sha256(data)
     local hash = 0
@@ -34,10 +28,6 @@ function Crypto:sha256(data)
     return hex
 end
 
-function Crypto:md5(data)
-    return self:sha256(data):sub(1, 32)
-end
-
 function Crypto:xor_encrypt(data, key)
     if #key == 0 then return data end
     
@@ -56,20 +46,17 @@ function Crypto:xor_decrypt(data, key)
 end
 
 function Crypto:base64_encode(data)
-    local b64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    local b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     local result = {}
     local padding = (3 - #data % 3) % 3
     data = data .. string.rep("\0", padding)
     
     for i = 1, #data, 3 do
-        local n = (string.byte(data, i) << 16) +
-                  (string.byte(data, i + 1) << 8) +
-                  string.byte(data, i + 2)
-        
-        table.insert(result, b64_chars:sub((n >> 18) + 1, (n >> 18) + 1))
-        table.insert(result, b64_chars:sub(((n >> 12) % 64) + 1, ((n >> 12) % 64) + 1))
-        table.insert(result, b64_chars:sub(((n >> 6) % 64) + 1, ((n >> 6) % 64) + 1))
-        table.insert(result, b64_chars:sub((n % 64) + 1, (n % 64) + 1))
+        local n = (string.byte(data, i) << 16) + (string.byte(data, i + 1) << 8) + string.byte(data, i + 2)
+        table.insert(result, b64:sub((n >> 18) + 1, (n >> 18) + 1))
+        table.insert(result, b64:sub(((n >> 12) % 64) + 1, ((n >> 12) % 64) + 1))
+        table.insert(result, b64:sub(((n >> 6) % 64) + 1, ((n >> 6) % 64) + 1))
+        table.insert(result, b64:sub((n % 64) + 1, (n % 64) + 1))
     end
     
     for i = 1, padding do
@@ -80,15 +67,14 @@ function Crypto:base64_encode(data)
 end
 
 function Crypto:base64_decode(data)
-    local b64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    local b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     local result = {}
+    local reverse_map = {}
+    for i = 1, #b64 do
+        reverse_map[b64:sub(i, i)] = i - 1
+    end
     
     data = data:gsub("%s", ""):gsub("%=", "")
-    
-    local reverse_map = {}
-    for i = 1, #b64_chars do
-        reverse_map[b64_chars:sub(i, i)] = i - 1
-    end
     
     for i = 1, #data, 4 do
         local n = 0
@@ -97,7 +83,6 @@ function Crypto:base64_decode(data)
                 n = n * 64 + (reverse_map[data:sub(i + j, i + j)] or 0)
             end
         end
-        
         table.insert(result, string.char((n >> 16) % 256))
         if i + 2 <= #data then
             table.insert(result, string.char((n >> 8) % 256))
@@ -114,12 +99,9 @@ function Crypto:generate_key(length)
     length = length or 32
     local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     local key = {}
-    
     for i = 1, length do
-        local r = math.random(1, #chars)
-        table.insert(key, chars:sub(r, r))
+        table.insert(key, chars:sub(math.random(1, #chars), math.random(1, #chars)))
     end
-    
     return table.concat(key)
 end
 

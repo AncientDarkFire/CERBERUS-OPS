@@ -1,15 +1,10 @@
 --[[
     Network Module
     CERBERUS OPS - Core Module
-    Versión: 1.0.0
-    
-    Sistema de comunicación entre computadoras via modem.
-    Implementa broadcast, mensajes directos y callbacks.
+    Versión: 2.0.0
 ]]
 
 local Network = {
-    VERSION = "1.0.0",
-    listeners = {},
     defaultChannel = 100
 }
 
@@ -19,14 +14,13 @@ local myId = os.getComputerID()
 function Network:init(channel)
     self.modem = peripheral.find("modem")
     if not self.modem then
-        error("No se encontró módem de red")
+        error("No se encontro modem")
     end
-    
     self.defaultChannel = channel or 100
     self.modem.open(self.defaultChannel)
 end
 
-function Network:broadcast(channel, message)
+function Network:broadcast(message, channel)
     channel = channel or self.defaultChannel
     if not self.modem then self:init(channel) end
     
@@ -38,7 +32,7 @@ function Network:broadcast(channel, message)
     })
 end
 
-function Network:send(targetId, channel, message)
+function Network:send(targetId, message, channel)
     channel = channel or self.defaultChannel
     if not self.modem then self:init(channel) end
     
@@ -51,7 +45,7 @@ function Network:send(targetId, channel, message)
     })
 end
 
-function Network:respond(originalMsg, channel, response)
+function Network:respond(originalMsg, response, channel)
     channel = channel or self.defaultChannel
     if not self.modem then self:init(channel) end
     
@@ -59,26 +53,9 @@ function Network:respond(originalMsg, channel, response)
         from = myId,
         to = originalMsg.from,
         type = "response",
-        original = originalMsg,
         message = response,
         timestamp = os.time()
     })
-end
-
-function Network:listen(callback)
-    while true do
-        local event, side, channel, replyChannel, message = os.pullEvent("modem_message")
-        
-        if type(message) == "table" then
-            if message.type == "direct" then
-                if message.to == myId or message.to == 0 then
-                    callback(message)
-                end
-            elseif message.type == "broadcast" then
-                callback(message)
-            end
-        end
-    end
 end
 
 function Network:receive(timeout)
@@ -98,25 +75,6 @@ end
 
 function Network:getId()
     return myId
-end
-
-function Network:getConnectedComputers()
-    self:broadcast(self.defaultChannel, {type = "ping"})
-    local computers = {}
-    
-    local startTime = os.clock()
-    while os.clock() - startTime < 2 do
-        local channel, reply, message = self:receive(1)
-        if message and message.type == "response" and message.original.type == "ping" then
-            computers[message.from] = true
-        end
-    end
-    
-    local result = {}
-    for id in pairs(computers) do
-        table.insert(result, id)
-    end
-    return result
 end
 
 function Network:close()

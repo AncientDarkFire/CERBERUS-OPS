@@ -27,27 +27,24 @@ PATRÓN DE命名:
 ### 2. Sistema de Archivos del Proyecto
 
 ```
-src/
-├── core/                    # Sistemas base
-│   ├── auth/               # Sistema de autenticación
-│   ├── crypto/             # Cifrado y seguridad
-│   ├── logger/             # Registro de eventos
-│   └── network/            # Comunicación entre equipos
-│
-├── presidential/           # Módulos de alto nivel
-│   ├── nuclear_control/    # Panel de lanzamiento
-│   ├── secure_docs/        # Documentos clasificados
-│   ├── secure_msg/        # Mensajería encriptada
-│   └── sentinel_hud/       # Panel de control central
-│
-├── templates/              # Plantillas reutilizables
-│   ├── boot/              # Scripts de inicio
-│   ├── ui/                # Componentes de interfaz
-│   └── peripherals/       # Drivers de periféricos
-│
-└── scripts/               # Utilidades
-    ├── generators/        # Generadores de código
-    └── validators/        # Validadores
+cerberus/
+├── init.lua                    # Boot principal
+├── diag.lua                    # Script de diagnostico
+├── core/
+│   ├── logger.lua             # Logs del sistema
+│   ├── crypto.lua             # Cifrado
+│   └── network.lua            # Red
+├── lib/
+│   └── ui.lua                 # Componentes UI
+├── config/
+│   └── system.lua             # Configuracion
+├── presidential/
+│   ├── sentinel_hud.lua       # Panel central
+│   ├── nuclear_control.lua    # Lanzamiento nuclear
+│   ├── secure_msg.lua         # Mensajeria segura
+│   └── secure_docs.lua        # Documentos clasificados
+├── logs/                      # Logs
+└── docs/                      # Documentos guardados
 ```
 
 ### 3. Convenciones Lua
@@ -326,34 +323,31 @@ Esta es la fuente oficial de documentación y siempre debe ser la referencia pri
 
 ### Método de instalación preferido
 
-**NUNCA** escribir código línea por línea en el juego. Usar siempre:
+**NUNCA** escribir código línea por línea en el juego. Usar siempre descarga por URL.
 
-#### Opción 1: Pastebin (Recomendado)
+#### GitHub Raw (Recomendado)
 ```bash
-pastebin get <codigo> <archivo>
-```
-
-#### Opción 2: HTTP (si hay servidor)
-```bash
-wget <url> <archivo>
-```
-
-#### Opción 3: GitHub raw
-```bash
-wget https://raw.githubusercontent.com/usuario/repo/main/archivo.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/<ruta>
 ```
 
 ### Script de Instalación Automática
 
-Ver: `docs/URLS.md` para la lista completa de URLs de instalación.
+Ver: `docs/URLS.md` para la lista completa de URLs.
 
-Script principal:
+Instalación con un comando:
 ```bash
-wget https://raw.githubusercontent.com/usuario/CERBERUS-OPS/main/install.lua
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install.lua install.lua
 install
+```
+
+### Configurar repositorio propio
+
+Cuando subas a tu propio repositorio, cambia el usuario:
+```lua
+BASE_URL = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/src"
 ```
 
 ---
 
-*Última actualización: 2026-04-05*
-*Versión del documento: 1.0*
+*Última actualización: 2026-04-06*
+*Versión del documento: 2.0*
