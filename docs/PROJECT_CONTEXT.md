@@ -319,32 +319,38 @@ Esta es la fuente oficial de documentación y siempre debe ser la referencia pri
 
 ---
 
-## 📡 SISTEMA DE INSTALACIÓN POR URLs
+## 📡 SISTEMA DE INSTALACIÓN EN DISCO
 
-### Método de instalación preferido
+### Metodo Recomendado: Instalacion en Floppy Disk
 
-**NUNCA** escribir código línea por línea en el juego. Usar siempre descarga por URL.
+1. Conectar Disk Drive a la computadora
+2. Insertar Floppy Disk
+3. Descargar e instalar:
+   ```bash
+   wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install.lua install.lua
+   install
+   ```
+4. El disco se renombra automaticamente a **CERBERUS-OPS**
+5. Usar el disco en cualquier computadora
 
-#### GitHub Raw (Recomendado)
-```bash
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/<ruta>
+### Estructura del Disco
+
 ```
-
-### Script de Instalación Automática
-
-Ver: `docs/URLS.md` para la lista completa de URLs.
-
-Instalación con un comando:
-```bash
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install.lua install.lua
-install
+CERBERUS-OPS/
+├── autorun.lua       # Auto-ejecuta al insertar
+└── cerberus/
+    ├── init.lua      # Boot principal
+    ├── core/         # Modulos core
+    ├── lib/          # Librerias
+    ├── config/       # Configuracion
+    └── presidential/ # Sistemas presicenciales
 ```
 
 ### Configurar repositorio propio
 
-Cuando subas a tu propio repositorio, cambia el usuario:
+Cuando subas a tu propio repositorio, cambia la URL en install.lua:
 ```lua
-BASE_URL = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/src"
+BASE_URL = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/cerberus"
 ```
 
 ---

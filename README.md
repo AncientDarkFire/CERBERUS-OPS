@@ -1,57 +1,49 @@
-# CERBERUS OPS - Red Presidencial Minecraft
+# CERBERUS OPS
 
-Sistema centralizado de control para servidores Minecraft Forge 1.20.1 con CC: Tweaked, CC:C Bridge y Create.
+Sistema de Red Presidencial para Minecraft con CC: Tweaked.
 
-## Stack Tecnológico
+## Caracteristicas
 
-| Mod | Versión | Propósito |
-|-----|---------|-----------|
-| Minecraft Forge | 1.20.1 | Base del servidor |
-| CC: Tweaked | 1.20.1 | Computadoras y periféricos Lua |
-| CC:C Bridge | Compatible | Bridge entre CC y Create |
-| Create | Latest | Automatización y mecánica |
+- **SENTINEL HUD** - Panel de control central
+- **NUCLEAR CONTROL** - Sistema de lanzamiento nuclear
+- **SECURE MSG** - Mensajeria encriptada
+- **SECURE DOCS** - Almacenamiento de documentos clasificados
 
-## Módulos del Sistema
+## Requisitos
 
-### 🏛️ Red Presidencial
-- **NUCLEAR_CONTROL** - Panel de lanzamiento nuclear
-- **SECURE_DOCS** - Almacenamiento de documentos clasificados
-- **SECURE_MSG** - Sistema de mensajería encriptada
-- **SENTINEL_HUD** - Panel de control central (HUD)
+- Minecraft Forge 1.20.1
+- CC: Tweaked
+- Disk Drive + Floppy Disk
 
-### ⚙️ Módulos Core
-- **AUTH** - Sistema de autenticación y permisos
-- **ENCRYPT** - Cifrado de datos y comunicaciones
-- **LOGGER** - Registro de eventos del sistema
-- **NETWORK** - Comunicación entre sistemas
+## Instalacion Rapida
 
-## Estructura del Proyecto
+1. Conecta un **Disk Drive** a tu computadora
+2. Inserta un **Floppy Disk**
+3. Descarga el instalador:
+   ```bash
+   wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install.lua install.lua
+   ```
+4. Ejecuta:
+   ```bash
+   install
+   ```
+5. Usa el disco en cualquier computadora y reinicia
+
+## Comandos
 
 ```
-CERBERUS OPS/
-├── docs/               # Documentación del proyecto
-├── src/
-│   ├── core/          # Sistemas centrales
-│   ├── presidential/   # Módulos de la red presidencial
-│   ├── templates/     # Templates reutilizables
-│   └── scripts/       # Scripts de utilidad
-├── config/            # Configuraciones
-└── tests/            # Pruebas de sistemas
+hud      - Panel SENTINEL
+nuclear  - Control Nuclear
+msg      - Mensajeria Segura
+docs     - Documentos Clasificados
+diag     - Diagnostico
+help     - Mostrar ayuda
 ```
 
-## Inicio Rápido
+## Documentacion
 
-1. Consulta `docs/GUIA.md` para implementar sistemas en el juego
-2. Revisa `docs/SKILL.md` para conocer las capacidades de la IA
-3. Consulta `docs/PROJECT_CONTEXT.md` para las reglas del proyecto
+Ver `docs/GUIA.md` para instrucciones detalladas.
 
-## Comandos de Computadora
+## Mas Info
 
-```lua
--- Boot básico
-bios.call("login")
-```
-
-## Estado del Proyecto
-
-🚧 **EN DESARROLLO** - Fase de arquitectura base
+- Wiki CC: Tweaked: https://tweaked.cc/

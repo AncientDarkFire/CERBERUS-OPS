@@ -3,22 +3,30 @@
 
 ---
 
-## 📦 INSTALACIÓN
+## INSTALACION RECOMENDADA
 
 ```bash
 wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install.lua install.lua
 install
 ```
 
+Esto copia todo el sistema a un floppy disk.
+
 ---
 
-## 🔗 ARCHIVOS INDIVIDUALES
+## URLS DE ARCHIVOS INDIVIDUALES
 
-### Boot y Core
+### Boot
 
 | Archivo | URL |
 |---------|-----|
 | init.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/init.lua` |
+| autorun.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/autorun.lua` |
+
+### Core
+
+| Archivo | URL |
+|---------|-----|
 | logger.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/logger.lua` |
 | crypto.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/crypto.lua` |
 | network.lua | `https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/network.lua` |
@@ -41,31 +49,15 @@ install
 
 ---
 
-## 📋 INSTALACIÓN MANUAL
-
-```bash
-# Crear estructura
-mkdir /cerberus/core
-mkdir /cerberus/lib
-mkdir /cerberus/presidential
-mkdir /cerberus/config
-
-# Descargar archivos
-wget <URL> <DESTINO>
-```
-
-### Ejemplo:
-```bash
-mkdir /cerberus/core
-wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/cerberus/core/logger.lua /cerberus/core/logger.lua
-```
-
----
-
-## ⚠️ CONFIGURAR REPOSITORIO
+## CONFIGURAR PROPIO REPOSITORIO
 
 Para usar tu propio repositorio, cambia `AncientDarkFire` por tu usuario en las URLs.
 
+En install.lua, cambia:
+```lua
+BASE_URL = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/cerberus"
+```
+
 ---
 
-*Última actualización: 2026-04-06*
+*Ultima actualizacion: 2026-04-06*
