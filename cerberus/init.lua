@@ -121,11 +121,11 @@ end
 
 local function runSystem(systemName)
     local paths = {
-        hud = "/cerberus/presidential/sentinel_hud",
-        nuclear = "/cerberus/presidential/nuclear_control",
-        msg = "/cerberus/presidential/secure_msg",
-        docs = "/cerberus/presidential/secure_docs",
-        diag = "/cerberus/diag"
+        hud = "/presidential/sentinel_hud",
+        nuclear = "/presidential/nuclear_control",
+        msg = "/presidential/secure_msg",
+        docs = "/presidential/secure_docs",
+        diag = "/diag"
     }
     
     local path = paths[systemName]
