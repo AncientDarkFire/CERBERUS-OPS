@@ -6,12 +6,27 @@
 local System = {
     NAME = "CERBERUS OPS",
     VERSION = "2.1.0",
-    SYSTEM_ID = os.computerID()
+    SYSTEM_ID = os.computerID(),
+    BASE_PATH = nil
 }
 
-_G.CERBERUS = System
+local function findDiskMount()
+    local names = peripheral.getNames()
+    for _, name in ipairs(names) do
+        local ptype = peripheral.getType(name)
+        if ptype == "drive" and disk.isPresent(name) and disk.hasData(name) then
+            local mountPath = disk.getMountPath(name)
+            if mountPath and fs.exists(mountPath .. "/cerberus/init.lua") then
+                return mountPath .. "/cerberus"
+            end
+        end
+    end
+    return nil
+end
 
 local function bootSequence()
+    System.BASE_PATH = findDiskMount()
+    
     term.setBackgroundColor(colors.black)
     term.setTextColor(colors.green)
     term.clear()
@@ -26,7 +41,13 @@ local function bootSequence()
     print("[BOOT] Inicializando...")
     sleep(0.5)
     
-    package.path = "/cerberus/core/?.lua;/cerberus/lib/?.lua;" .. package.path
+    if System.BASE_PATH then
+        print("[OK] Disco detectado: " .. System.BASE_PATH)
+        package.path = System.BASE_PATH .. "/core/?.lua;" .. System.BASE_PATH .. "/lib/?.lua;" .. package.path
+    else
+        print("[WARN] Disco no detectado, usando rutas locales")
+        package.path = "/cerberus/core/?.lua;/cerberus/lib/?.lua;" .. package.path
+    end
     print("[OK] Paths configurados")
     
     sleep(0.3)
@@ -120,12 +141,14 @@ local function showPeripherals()
 end
 
 local function runSystem(systemName)
+    local basePath = System.BASE_PATH or "/cerberus"
+    
     local paths = {
-        hud = "/presidential/sentinel_hud",
-        nuclear = "/presidential/nuclear_control",
-        msg = "/presidential/secure_msg",
-        docs = "/presidential/secure_docs",
-        diag = "/diag"
+        hud = basePath .. "/presidential/sentinel_hud",
+        nuclear = basePath .. "/presidential/nuclear_control",
+        msg = basePath .. "/presidential/secure_msg",
+        docs = basePath .. "/presidential/secure_docs",
+        diag = basePath .. "/diag"
     }
     
     local path = paths[systemName]
@@ -133,7 +156,7 @@ local function runSystem(systemName)
         if fs.exists(path .. ".lua") then
             print("Ejecutando " .. systemName .. "...")
             sleep(0.5)
-            shell.run("lua " .. path)
+            shell.run(path)
         else
             print("Error: Sistema no encontrado - " .. path .. ".lua")
         end
