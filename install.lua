@@ -1,288 +1,470 @@
---[[
-    CERBERUS OPS - Script de Instalacion en Disco
-    Version: 2.2.0
-    
-    Este script copia todo el sistema a un floppy disk.
-    Luego ese disco puede usarse para instalar en otras computadoras.
-    
-    Uso:
-        wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/install.lua install.lua
-        install
-]]
+-- install.lua - CERBERUS_OPS Installer v2.2.0
+-- CC:Tweaked 1.20.1 | Compatible Lua 5.2
 
-local Installer = {
-    VERSION = "2.2.0",
-    BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main",
-    DISK_NAME = "CERBERUS-OPS",
-    
-    FILES = {
-        {path = "/cerberus/init.lua", desc = "Boot principal"},
-        {path = "/cerberus/presidential/sentinel_hud.lua", desc = "SENTINEL HUD"},
-        {path = "/cerberus/presidential/nuclear_control.lua", desc = "Control Nuclear"},
-        {path = "/cerberus/presidential/secure_msg.lua", desc = "Mensajeria Segura"},
-        {path = "/cerberus/presidential/secure_docs.lua", desc = "Documentos Clasificados"}
-    }
+-- ============================================================
+--  DETECCION DE TERMINAL / MONITOR
+-- ============================================================
+
+local native = term.current()
+local mon = peripheral.find("monitor")
+if mon then
+  mon.setTextScale(0.5)
+  term.redirect(mon)
+end
+
+local w, h = term.getSize()
+
+-- ============================================================
+--  PALETA
+-- ============================================================
+local C = {
+  bg       = colors.black,
+  panel    = colors.blue,
+  accent   = colors.lightBlue,
+  title    = colors.white,
+  dim      = colors.gray,
+  ok       = colors.lime,
+  warn     = colors.yellow,
+  err      = colors.red,
+  bar_fill = colors.cyan,
+  bar_bg   = colors.gray,
 }
 
-function Installer:printHeader()
-    term.setBackgroundColor(colors.black)
-    term.clear()
-    term.setTextColor(colors.green)
-    print("============================================")
-    print("       CERBERUS OPS - INSTALADOR")
-    print("       Version " .. self.VERSION)
-    print("============================================")
-    print("")
+-- ============================================================
+--  FUNCIONES BASE
+-- ============================================================
+
+local function cls()
+  term.setBackgroundColor(C.bg)
+  term.clear()
+  term.setCursorPos(1, 1)
 end
 
-function Installer:findDiskDrive()
-    local names = peripheral.getNames()
-    for _, name in ipairs(names) do
-        local ptype = peripheral.getType(name)
-        if ptype == "drive" then
-            return name
-        end
-    end
-    return nil
+local function write_at(x, y, text, fg, bg)
+  term.setBackgroundColor(bg or C.bg)
+  term.setTextColor(fg or C.title)
+  term.setCursorPos(x, y)
+  term.write(text)
 end
 
-function Installer:checkDisk(driveName)
-    if not driveName then
-        return false, "No se encontro Disk Drive"
-    end
-    
-    if not disk.isPresent(driveName) then
-        return false, "No hay disco en el Disk Drive"
-    end
-    
-    return true, driveName
+local function center_x(text)
+  return math.max(1, math.floor((w - #text) / 2) + 1)
 end
 
-function Installer:prepareDisk(driveName)
-    print("Preparando disco...")
-    print("  Nombre: " .. self.DISK_NAME .. " " .. self.VERSION)
-    
-    local success, err = pcall(function()
-        disk.setLabel(driveName, self.DISK_NAME .. " " .. self.VERSION)
-    end)
-    
-    if not success then
-        return false, "Error al renombrar disco: " .. tostring(err)
-    end
-    
-    local label = disk.getLabel(driveName)
-    print("  Label: " .. label)
-    
-    return true, driveName
+local function write_centered(y, text, fg, bg)
+  write_at(center_x(text), y, text, fg, bg)
 end
 
-function Installer:getDiskPath(driveName)
-    local mountPath = disk.getMountPath(driveName)
-    if not mountPath then
-        return nil
-    end
-    return mountPath
+local function hline(y, char, fg, bg, x1, x2)
+  x1 = x1 or 1
+  x2 = x2 or w
+  write_at(x1, y, string.rep(char, x2 - x1 + 1), fg, bg)
 end
 
-function Installer:downloadFile(url, path)
-    print("  Descargando: " .. path)
-    
-    local success, response = pcall(function()
-        local handle = http.get(url, nil, true)
-        if not handle then
-            return nil, "No se pudo conectar"
-        end
-        local content = handle.readAll()
-        handle.close()
-        return content
-    end)
-    
-    if success and response and #response > 0 then
-        return true, response
-    else
-        return false, "Error al descargar"
+local function draw_border(x1, y1, x2, y2, fg, bg)
+  bg = bg or C.panel
+  fg = fg or C.accent
+  for y = y1, y2 do
+    for x = x1, x2 do
+      write_at(x, y, " ", fg, bg)
     end
+  end
+  write_at(x1, y1, "+", fg, bg)
+  write_at(x2, y1, "+", fg, bg)
+  write_at(x1, y2, "+", fg, bg)
+  write_at(x2, y2, "+", fg, bg)
+  for x = x1+1, x2-1 do
+    write_at(x, y1, "-", fg, bg)
+    write_at(x, y2, "-", fg, bg)
+  end
+  for y = y1+1, y2-1 do
+    write_at(x1, y, "|", fg, bg)
+    write_at(x2, y, "|", fg, bg)
+  end
 end
 
-function Installer:createDirsOnDisk(basePath)
-    local dirs = {
-        "/cerberus",
-        "/cerberus/presidential",
-        "/cerberus/docs"
-    }
-    
-    if fs.exists(basePath .. "/cerberus") then
-        fs.delete(basePath .. "/cerberus")
-    end
-    
-    for _, dir in ipairs(dirs) do
-        local fullPath = basePath .. dir
-        if not fs.exists(fullPath) then
-            fs.makeDir(fullPath)
-        end
-    end
+local function draw_header(title)
+  hline(1, " ", C.panel, C.accent)
+  write_centered(1, "  " .. title .. "  ", C.panel, C.accent)
+  hline(2, "-", C.dim, C.bg)
 end
 
-function Installer:writeFileOnDisk(basePath, relativePath, content)
-    local fullPath = basePath .. relativePath
-    
-    if fs.exists(fullPath) then
-        fs.delete(fullPath)
-    end
-    
-    local file = fs.open(fullPath, "w")
-    if file then
-        file.write(content)
-        file.close()
-        return true
-    end
-    return false
+local function draw_footer(left, right)
+  hline(h, " ", C.title, C.panel)
+  write_at(2, h, left or "DoD // MineField Mods", C.title, C.panel)
+  if right then
+    write_at(w - #right - 1, h, right, C.dim, C.panel)
+  end
 end
 
-function Installer:installFilesOnDisk(diskPath)
-    print("")
-    print("Base URL: " .. self.BASE_URL)
-    print("")
-    
-    self:createDirsOnDisk(diskPath)
-    
-    local installed = 0
-    local failed = 0
-    
-    for _, file in ipairs(self.FILES) do
-        local url = self.BASE_URL .. file.path
-        local success, content = self:downloadFile(url, file.path)
-        
-        if success then
-            local writeSuccess = self:writeFileOnDisk(diskPath, file.path, content)
-            if writeSuccess then
-                print("    OK: " .. file.path)
-                installed = installed + 1
-            else
-                print("    ERROR al escribir: " .. file.path)
-                failed = failed + 1
-            end
-        else
-            print("    ERROR: " .. file.path)
-            failed = failed + 1
-        end
-    end
-    
-    return installed, failed
+-- ============================================================
+--  DATOS DEL INSTALADOR
+-- ============================================================
+
+local VERSION  = "2.2.0"
+local BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main"
+local DISK_NAME = "CERBERUS-OPS"
+
+local FILES = {
+  { path = "/cerberus/init.lua",                      desc = "Boot principal"        },
+  { path = "/cerberus/presidential/sentinel_hud.lua", desc = "SENTINEL HUD"          },
+  { path = "/cerberus/presidential/nuclear_control.lua", desc = "Control Nuclear"    },
+  { path = "/cerberus/presidential/secure_msg.lua",   desc = "Mensajeria Segura"     },
+  { path = "/cerberus/presidential/secure_docs.lua",  desc = "Documentos Clasif."    },
+}
+
+-- ============================================================
+--  PANTALLA DE SPLASH
+-- ============================================================
+
+local function splash_screen()
+  cls()
+  local mid = math.floor(h / 2)
+  local pw  = math.min(42, w - 2)
+  local px1 = math.floor((w - pw) / 2) + 1
+  local px2 = px1 + pw - 1
+  local py1 = mid - 4
+  local py2 = mid + 5
+
+  draw_border(px1, py1, px2, py2, C.accent, C.panel)
+
+  write_centered(py1 + 1, "CERBERUS_OPS",               C.accent, C.panel)
+  write_centered(py1 + 2, "========================",   C.dim,    C.panel)
+  write_centered(py1 + 3, "INSTALADOR DE DISCO",        C.title,  C.panel)
+  write_centered(py1 + 4, "Version " .. VERSION,        C.dim,    C.panel)
+  write_centered(py1 + 5, "========================",   C.dim,    C.panel)
+  write_centered(py1 + 6, "Department Of Defense",      C.title,  C.panel)
+  write_centered(py1 + 7, "-   MineField Mods   -",     C.dim,    C.panel)
+
+  draw_footer()
+  sleep(2)
 end
 
-function Installer:createDiagOnDisk(diskPath)
-    local diag = [[
+-- ============================================================
+--  PANTALLA DE ERROR
+-- ============================================================
+
+local function error_screen(title, lines, hint_lines)
+  cls()
+  local mid = math.floor(h / 2)
+  local pw  = math.min(42, w - 2)
+  local px1 = math.floor((w - pw) / 2) + 1
+  local px2 = px1 + pw - 1
+  local ph  = 2 + #lines + (hint_lines and (#hint_lines + 1) or 0)
+  local py1 = mid - math.floor(ph / 2) - 1
+  local py2 = py1 + ph + 1
+
+  draw_header("CERBERUS_OPS  //  INSTALADOR")
+  draw_border(px1, py1, px2, py2, C.err, C.bg)
+
+  write_centered(py1 + 1, "[ " .. title .. " ]", C.err, C.bg)
+
+  for i, line in ipairs(lines) do
+    write_centered(py1 + 1 + i, line, C.warn, C.bg)
+  end
+
+  if hint_lines then
+    write_centered(py1 + 1 + #lines + 1, string.rep("-", pw - 4), C.dim, C.bg)
+    for i, line in ipairs(hint_lines) do
+      write_centered(py1 + 1 + #lines + 1 + i, line, C.dim, C.bg)
+    end
+  end
+
+  draw_footer("DoD // MineField Mods", "ERROR")
+end
+
+-- ============================================================
+--  PANTALLA PRINCIPAL DE INSTALACION
+-- ============================================================
+
+-- Filas del log de archivos
+local file_log_y = 0
+local file_log_entries = {}
+
+local function install_screen_init(drive_name, disk_path)
+  cls()
+  draw_header("CERBERUS_OPS  //  INSTALADOR  v" .. VERSION)
+  draw_footer("DoD // MineField Mods", "INSTALANDO...")
+
+  -- Panel info disco
+  local info_pw = math.min(40, w - 2)
+  local info_px = math.floor((w - info_pw) / 2) + 1
+  draw_border(info_px, 3, info_px + info_pw - 1, 7, C.accent, C.bg)
+
+  write_at(info_px + 2, 4, "Drive  :", C.dim,    C.bg)
+  write_at(info_px + 11, 4, drive_name, C.accent, C.bg)
+  write_at(info_px + 2, 5, "Montado:", C.dim,    C.bg)
+  write_at(info_px + 11, 5, disk_path,  C.accent, C.bg)
+  write_at(info_px + 2, 6, "Label  :", C.dim,    C.bg)
+  write_at(info_px + 11, 6, DISK_NAME .. " " .. VERSION, C.title, C.bg)
+
+  -- Cabecera de la tabla de archivos
+  local tbl_y = 9
+  hline(tbl_y, "-", C.dim, C.bg)
+  write_at(3,      tbl_y, "+", C.dim, C.bg)
+  write_at(w - 2,  tbl_y, "+", C.dim, C.bg)
+  write_at(4,      tbl_y, " Archivo ", C.accent, C.bg)
+  write_at(w - 14, tbl_y, " Estado ", C.accent, C.bg)
+  hline(tbl_y + 1, "-", C.dim, C.bg)
+
+  file_log_y = tbl_y + 2
+  file_log_entries = {}
+end
+
+local function log_file_row(index, path, desc, status, status_color)
+  local row_y = file_log_y + index - 1
+  -- Limpiar fila
+  write_at(1, row_y, string.rep(" ", w), C.dim, C.bg)
+  -- Descripcion
+  local short = desc
+  if #desc > w - 16 then short = desc:sub(1, w - 17) .. "." end
+  write_at(3, row_y, short, C.dim, C.bg)
+  -- Estado alineado a la derecha
+  local sx = w - #status - 2
+  write_at(sx, row_y, status, status_color, C.bg)
+end
+
+-- Barra de progreso total
+local prog_y = 0
+
+local function draw_total_bar(current, total)
+  prog_y = file_log_y + #FILES + 2
+  local label = string.format("Progreso: %d / %d", current, total)
+  write_at(1, prog_y, string.rep(" ", w), C.dim, C.bg)
+  write_centered(prog_y, label, C.dim, C.bg)
+
+  local bar_w = math.min(38, w - 6)
+  local bx    = math.floor((w - bar_w) / 2) + 1
+  local filled = math.floor(bar_w * current / total)
+
+  write_at(bx, prog_y + 1, string.rep(" ", bar_w), C.bar_bg, C.bar_bg)
+  if filled > 0 then
+    write_at(bx, prog_y + 1, string.rep(" ", filled), C.bar_fill, C.bar_fill)
+  end
+  local pct = math.floor(current / total * 100)
+  write_at(bx + bar_w + 1, prog_y + 1, string.format("%3d%%", pct), C.title, C.bg)
+end
+
+-- ============================================================
+--  PANTALLA FINAL
+-- ============================================================
+
+local function done_screen(installed, failed)
+  cls()
+
+  local success = (failed == 0)
+  local hdr_col  = success and C.ok or C.warn
+  local hdr_text = success and " INSTALACION COMPLETADA " or " INSTALACION PARCIAL "
+
+  hline(1, " ", C.bg, hdr_col)
+  write_centered(1, hdr_text, C.bg, hdr_col)
+  draw_footer("DoD // MineField Mods", success and "OK" or "PARCIAL")
+
+  local mid = math.floor(h / 2)
+  local pw  = math.min(40, w - 2)
+  local px  = math.floor((w - pw) / 2) + 1
+  draw_border(px, mid - 5, px + pw - 1, mid + 5, hdr_col, C.bg)
+
+  write_centered(mid - 3, DISK_NAME .. " " .. VERSION, hdr_col,  C.bg)
+  write_centered(mid - 2, string.rep("-", pw - 4),     C.dim,    C.bg)
+
+  write_at(px + 2, mid - 1, "Archivos OK  :", C.dim,    C.bg)
+  write_at(px + 17, mid - 1, tostring(installed), C.ok, C.bg)
+
+  if failed > 0 then
+    write_at(px + 2, mid, "Fallidos     :", C.dim,  C.bg)
+    write_at(px + 17, mid, tostring(failed), C.err, C.bg)
+  end
+
+  write_centered(mid + 2, string.rep("-", pw - 4), C.dim, C.bg)
+
+  if success then
+    write_centered(mid + 3, "Inserta el disco y reinicia.", C.dim,   C.bg)
+    write_centered(mid + 4, "El sistema cargara solo.",     C.dim,   C.bg)
+  else
+    write_centered(mid + 3, "Reintenta la instalacion.",    C.warn,  C.bg)
+    write_centered(mid + 4, "Verifica tu conexion.",        C.dim,   C.bg)
+  end
+
+  write_centered(mid + 5, "Reiniciando en 5s...", C.dim, C.bg)
+
+  -- Barra de cuenta regresiva
+  local bar_w = pw - 4
+  local bx = px + 2
+  for i = 1, bar_w do
+    write_at(bx + i - 1, mid + 6, " ", hdr_col, hdr_col)
+    sleep(5 / bar_w)
+  end
+end
+
+-- ============================================================
+--  LOGICA DE INSTALACION
+-- ============================================================
+
+local function find_drive()
+  for _, name in ipairs(peripheral.getNames()) do
+    if peripheral.getType(name) == "drive" then
+      return name
+    end
+  end
+  return nil
+end
+
+local function download_file(url)
+  local ok, result = pcall(function()
+    local handle = http.get(url, nil, true)
+    if not handle then return nil end
+    local content = handle.readAll()
+    handle.close()
+    return content
+  end)
+  if ok and result and #result > 0 then
+    return true, result
+  end
+  return false, nil
+end
+
+local function ensure_dirs(base_path)
+  local dirs = {
+    "/cerberus",
+    "/cerberus/presidential",
+    "/cerberus/docs",
+  }
+  if fs.exists(base_path .. "/cerberus") then
+    fs.delete(base_path .. "/cerberus")
+  end
+  for _, d in ipairs(dirs) do
+    local fp = base_path .. d
+    if not fs.exists(fp) then fs.makeDir(fp) end
+  end
+end
+
+local function write_file(base_path, rel_path, content)
+  local fp = base_path .. rel_path
+  if fs.exists(fp) then fs.delete(fp) end
+  local f = fs.open(fp, "w")
+  if f then
+    f.write(content)
+    f.close()
+    return true
+  end
+  return false
+end
+
+local function write_diag(disk_path)
+  local diag = [[
 -- CERBERUS OPS - Diagnostico
 term.clear()
 term.setTextColor(colors.green)
-print("============================================")
-print("    CERBERUS OPS - DIAGNOSTICO")
-print("============================================")
-print("")
+print("CERBERUS OPS - DIAGNOSTICO")
 print("ID: " .. os.computerID())
-print("Uptime: " .. math.floor(os.clock()) .. " segundos")
+print("Uptime: " .. math.floor(os.clock()) .. "s")
 print("")
 print("Perifericos:")
 for _, n in ipairs(peripheral.getNames()) do
-    print("  " .. n .. ": " .. peripheral.getType(n))
+  print("  " .. n .. ": " .. peripheral.getType(n))
 end
-print("")
 print("Modem: " .. (peripheral.find("modem") and "OK" or "NO"))
 print("Monitor: " .. (peripheral.find("monitor") and "OK" or "NO"))
-print("")
 if fs.exists("/cerberus") then
-    print("/cerberus: INSTALADO")
+  print("/cerberus: INSTALADO")
 else
-    print("/cerberus: NO INSTALADO")
+  print("/cerberus: NO INSTALADO")
 end
-print("")
-print("============================================")
 ]]
-    
-    local fullPath = diskPath .. "/cerberus/diag.lua"
-    
-    if fs.exists(fullPath) then
-        fs.delete(fullPath)
-    end
-    
-    local file = fs.open(fullPath, "w")
-    if file then
-        file.write(diag)
-        file.close()
-        print("  + /cerberus/diag.lua")
-    end
+  local f = fs.open(disk_path .. "/cerberus/diag.lua", "w")
+  if f then f.write(diag) f.close() end
 end
 
-function Installer:run()
-    self:printHeader()
-    
-    print("Buscando Disk Drive...")
-    local driveName = self:findDiskDrive()
-    
-    local success, err = self:checkDisk(driveName)
-    if not success then
-        term.setTextColor(colors.red)
-        print("ERROR: " .. err)
-        print("")
-        print("Asegurate de:")
-        print("  1. Tener un Disk Drive conectado")
-        print("  2. Tener un Floppy Disk insertado")
-        print("")
-        term.setTextColor(colors.white)
-        return
-    end
-    
-    print("Disk Drive encontrado: " .. driveName)
-    print("")
-    
-    success, err = self:prepareDisk(driveName)
-    if not success then
-        term.setTextColor(colors.red)
-        print("ERROR: " .. err)
-        return
-    end
-    
-    local diskPath = self:getDiskPath(driveName)
-    if not diskPath then
-        term.setTextColor(colors.red)
-        print("ERROR: No se pudo montar el disco")
-        return
-    end
-    
-    print("Disco montado en: " .. diskPath)
-    print("")
-    
-    local installed, failed = self:installFilesOnDisk(diskPath)
-    self:createDiagOnDisk(diskPath)
-    
-    print("")
-    print("============================================")
-    
-    if failed == 0 then
-        term.setTextColor(colors.lime)
-        print("  INSTALACION COMPLETADA")
-        term.setTextColor(colors.green)
+-- ============================================================
+--  SECUENCIA PRINCIPAL
+-- ============================================================
+
+splash_screen()
+
+-- Buscar drive
+local drive_name = find_drive()
+if not drive_name then
+  error_screen("ERROR DE HARDWARE", {
+    "No se encontro un Disk Drive.",
+    "Verifica la conexion del drive.",
+  }, {
+    "1. Conecta un Disk Drive",
+    "2. Inserta un Floppy Disk",
+    "3. Vuelve a ejecutar install",
+  })
+  sleep(6)
+  if mon then term.redirect(native) end
+  return
+end
+
+if not disk.isPresent(drive_name) then
+  error_screen("SIN DISCO", {
+    "El Disk Drive '" .. drive_name .. "'",
+    "no tiene un disco insertado.",
+  }, {
+    "Inserta un Floppy Disk y",
+    "vuelve a ejecutar install.",
+  })
+  sleep(6)
+  if mon then term.redirect(native) end
+  return
+end
+
+-- Preparar disco
+disk.setLabel(drive_name, DISK_NAME .. " " .. VERSION)
+local disk_path = disk.getMountPath(drive_name)
+
+if not disk_path then
+  error_screen("ERROR DE MONTAJE", {
+    "No se pudo montar el disco.",
+  }, nil)
+  sleep(5)
+  if mon then term.redirect(native) end
+  return
+end
+
+-- Pantalla de instalacion
+install_screen_init(drive_name, disk_path)
+ensure_dirs(disk_path)
+
+local installed = 0
+local failed    = 0
+
+for i, file in ipairs(FILES) do
+  -- Mostrar fila como "descargando"
+  log_file_row(i, file.path, file.desc, "descargando...", C.warn)
+  draw_total_bar(i - 1, #FILES + 1)
+
+  local ok, content = download_file(BASE_URL .. file.path)
+
+  if ok then
+    local wrote = write_file(disk_path, file.path, content)
+    if wrote then
+      log_file_row(i, file.path, file.desc, "[ OK ]", C.ok)
+      installed = installed + 1
     else
-        term.setTextColor(colors.yellow)
-        print("  INSTALACION PARCIAL")
-        print("  Instalados: " .. installed)
-        print("  Fallidos: " .. failed)
-        term.setTextColor(colors.green)
+      log_file_row(i, file.path, file.desc, "[WRITE]", C.err)
+      failed = failed + 1
     end
-    
-    print("============================================")
-    print("")
-    print("Disco '" .. self.DISK_NAME .. " " .. self.VERSION .. "' listo!")
-    print("")
-    print("Para usar:")
-    print("  1. Inserta el disco en la computadora")
-    print("  2. Reinicia o escribe: reboot")
-    print("  3. El sistema iniciara automaticamente")
-    print("")
-    print("O ejecuta manualmente:")
-    print("  lua /cerberus/init")
-    print("")
+  else
+    log_file_row(i, file.path, file.desc, "[ERROR]", C.err)
+    failed = failed + 1
+  end
+
+  sleep(0.1)
 end
 
-Installer:run()
+-- Diag
+log_file_row(#FILES + 1, "/cerberus/diag.lua", "Diagnostico", "escribiendo", C.warn)
+draw_total_bar(#FILES, #FILES + 1)
+write_diag(disk_path)
+log_file_row(#FILES + 1, "/cerberus/diag.lua", "Diagnostico", "[ OK ]", C.ok)
+draw_total_bar(#FILES + 1, #FILES + 1)
+
+sleep(0.8)
+
+-- Pantalla final + reboot
+done_screen(installed, failed)
+if mon then term.redirect(native) end
+os.reboot()
