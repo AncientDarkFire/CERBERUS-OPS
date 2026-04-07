@@ -13,7 +13,7 @@
 local Installer = {
     VERSION = "2.1.0",
     BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main",
-    DISK_NAME = "CERBERUS-OPS " .. self.VERSION,
+    DISK_NAME = "CERBERUS-OPS",
     
     FILES = {
         {path = "/cerberus/init.lua", desc = "Boot principal"},
@@ -66,10 +66,10 @@ end
 
 function Installer:prepareDisk(driveName)
     print("Preparando disco...")
-    print("  Nombre: " .. self.DISK_NAME)
+    print("  Nombre: " .. self.DISK_NAME .. " " .. self.VERSION)
     
     local success, err = pcall(function()
-        disk.setLabel(driveName, self.DISK_NAME)
+        disk.setLabel(driveName, self.DISK_NAME .. " " .. self.VERSION)
     end)
     
     if not success then
@@ -331,7 +331,7 @@ function Installer:run()
     
     print("============================================")
     print("")
-    print("Disco '" .. self.DISK_NAME .. "' listo!")
+    print("Disco '" .. self.DISK_NAME .. " " .. self.VERSION .. "' listo!")
     print("")
     print("Para usar:")
     print("  1. Inserta el disco en la computadora")
