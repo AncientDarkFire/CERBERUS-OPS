@@ -13,7 +13,7 @@
 local Installer = {
     VERSION = "2.1.0",
     BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main",
-    DISK_NAME = "CERBERUS-OPS",
+    DISK_NAME = "CERBERUS-OPS " .. self.VERSION,
     
     FILES = {
         {path = "/cerberus/init.lua", desc = "Boot principal"},
