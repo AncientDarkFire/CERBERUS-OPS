@@ -16,11 +16,20 @@ local SecureDocs = {
     documents = {}
 }
 
-local crypto = nil
 local currentUser = {name = "admin", level = 4}
 
+local function xorEncrypt(data, key)
+    if #key == 0 then return data end
+    local result = {}
+    for i = 1, #data do
+        local k = string.byte(key, (i - 1) % #key + 1)
+        local d = string.byte(data, i)
+        table.insert(result, string.char(bit.bxor(d, k)))
+    end
+    return table.concat(result)
+end
+
 function SecureDocs:init()
-    self.crypto = require("crypto")
     fs.makeDir(self.config.folder)
     self:loadIndex()
     return self
@@ -57,7 +66,7 @@ function SecureDocs:createDocument(title, content, securityLevel)
         modified = os.time()
     }
     
-    local encrypted = self.crypto:xor_encrypt(content, docId)
+    local encrypted = xorEncrypt(content, docId)
     
     local filePath = self.config.folder .. "/" .. docId .. ".dat"
     local file = fs.open(filePath, "w")
@@ -89,7 +98,7 @@ function SecureDocs:readDocument(docId)
     local encrypted = file.readAll()
     file.close()
     
-    return self.crypto:xor_decrypt(encrypted, docId), doc
+    return xorEncrypt(encrypted, docId), doc
 end
 
 function SecureDocs:listDocuments()

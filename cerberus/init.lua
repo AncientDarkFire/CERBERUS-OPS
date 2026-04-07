@@ -58,12 +58,10 @@ local function bootSequence()
     
     if System.BASE_PATH then
         print("[OK] Disco detectado: " .. System.BASE_PATH)
-        package.path = System.BASE_PATH .. "/core/?.lua;" .. System.BASE_PATH .. "/lib/?.lua;" .. package.path
     else
-        print("[WARN] Disco no detectado, usando rutas locales")
-        package.path = "/cerberus/core/?.lua;/cerberus/lib/?.lua;" .. package.path
+        print("[WARN] Disco no detectado")
     end
-    print("[OK] Paths configurados")
+    print("[OK] Sistema inicializado")
     
     sleep(0.3)
     

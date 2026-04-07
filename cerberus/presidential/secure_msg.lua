@@ -10,29 +10,84 @@ local SecureMsg = {
 }
 
 local modem = nil
-local crypto = nil
 local inbox = {}
 local myId = os.computerID()
+
+local function xorEncrypt(data, key)
+    if #key == 0 then return data end
+    local result = {}
+    for i = 1, #data do
+        local k = string.byte(key, (i - 1) % #key + 1)
+        local d = string.byte(data, i)
+        table.insert(result, string.char(bit.bxor(d, k)))
+    end
+    return table.concat(result)
+end
+
+local function base64Encode(data)
+    local b64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    local result = {}
+    local padding = (3 - #data % 3) % 3
+    data = data .. string.rep("\0", padding)
+    for i = 1, #data, 3 do
+        local n = (string.byte(data, i) << 16) + 
+                  (string.byte(data, i + 1) << 8) + 
+                  string.byte(data, i + 2)
+        table.insert(result, b64_chars:sub((n >> 18) + 1, (n >> 18) + 1))
+        table.insert(result, b64_chars:sub(((n >> 12) % 64) + 1, ((n >> 12) % 64) + 1))
+        table.insert(result, b64_chars:sub(((n >> 6) % 64) + 1, ((n >> 6) % 64) + 1))
+        table.insert(result, b64_chars:sub((n % 64) + 1, (n % 64) + 1))
+    end
+    for i = 1, padding do result[#result - i + 1] = "=" end
+    return table.concat(result)
+end
+
+local function base64Decode(data)
+    local b64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    data = data:gsub("[^A-Za-z0-9+/=]", "")
+    local result = {}
+    local i = 1
+    while i <= #data do
+        local a = b64_chars:find(data:sub(i, i)) - 1
+        local b = b64_chars:find(data:sub(i + 1, i + 1)) - 1
+        local c = b64_chars:find(data:sub(i + 2, i + 2)) - 1
+        local d = b64_chars:find(data:sub(i + 3, i + 3)) - 1
+        local n = (a << 18) + (b << 12) + ((c >= 0 and c << 6) or 0) + ((d >= 0 and d) or 0)
+        table.insert(result, string.char((n >> 16) % 256))
+        if c >= 0 then table.insert(result, string.char((n >> 8) % 256)) end
+        if d >= 0 then table.insert(result, string.char(n % 256)) end
+        i = i + 4
+    end
+    return table.concat(result):gsub("%z+$", "")
+end
+
+local function generateKey(length)
+    local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    local key = {}
+    for i = 1, length do
+        table.insert(key, chars:sub(math.random(1, #chars), math.random(1, #chars)))
+    end
+    return table.concat(key)
+end
 
 function SecureMsg:init()
     self.modem = peripheral.find("modem")
     if self.modem then
         self.modem.open(self.config.channel)
     end
-    self.crypto = require("crypto")
     return self
 end
 
 function SecureMsg:encryptMessage(content)
-    local key = self.crypto:generate_key(16)
-    local encrypted = self.crypto:xor_encrypt(content, key)
-    local encoded = self.crypto:base64_encode(encrypted)
+    local key = generateKey(16)
+    local encrypted = xorEncrypt(content, key)
+    local encoded = base64Encode(encrypted)
     return encoded, key
 end
 
-function SecureMsg:decryptMessage(content, keyHint)
-    local decoded = self.crypto:base64_decode(content)
-    return self.crypto:xor_decrypt(decoded, keyHint .. "XXXXXXXXXXXX")
+function SecureMsg:decryptMessage(content, key)
+    local decoded = base64Decode(content)
+    return xorEncrypt(decoded, key)
 end
 
 function SecureMsg:sendMessage(recipientId, content)

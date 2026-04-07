@@ -13,16 +13,11 @@
 local Installer = {
     VERSION = "2.1.0",
     BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main",
-    DISK_NAME = "CERBERUS-OPS",
+    DISK_NAME = "CERBERUS-OPS 2.1.0",
     
     FILES = {
         {path = "/cerberus/init.lua", desc = "Boot principal"},
         {path = "/cerberus/autorun.lua", desc = "AutoRun"},
-        {path = "/cerberus/core/logger.lua", desc = "Sistema de logs"},
-        {path = "/cerberus/core/crypto.lua", desc = "Sistema de cifrado"},
-        {path = "/cerberus/core/network.lua", desc = "Sistema de red"},
-        {path = "/cerberus/lib/ui.lua", desc = "Componentes UI"},
-        {path = "/cerberus/config/system.lua", desc = "Configuracion"},
         {path = "/cerberus/presidential/sentinel_hud.lua", desc = "SENTINEL HUD"},
         {path = "/cerberus/presidential/nuclear_control.lua", desc = "Control Nuclear"},
         {path = "/cerberus/presidential/secure_msg.lua", desc = "Mensajeria Segura"},
@@ -113,11 +108,7 @@ end
 function Installer:createDirsOnDisk(basePath)
     local dirs = {
         "/cerberus",
-        "/cerberus/core",
-        "/cerberus/lib",
         "/cerberus/presidential",
-        "/cerberus/config",
-        "/cerberus/logs",
         "/cerberus/docs"
     }
     
