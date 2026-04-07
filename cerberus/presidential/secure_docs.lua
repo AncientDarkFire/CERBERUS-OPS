@@ -20,7 +20,7 @@ local crypto = nil
 local currentUser = {name = "admin", level = 4}
 
 function SecureDocs:init()
-    self.crypto = require("/cerberus/core/crypto")
+    self.crypto = require("crypto")
     fs.makeDir(self.config.folder)
     self:loadIndex()
     return self

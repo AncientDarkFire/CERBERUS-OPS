@@ -19,7 +19,7 @@ function SecureMsg:init()
     if self.modem then
         self.modem.open(self.config.channel)
     end
-    self.crypto = require("/cerberus/core/crypto")
+    self.crypto = require("crypto")
     return self
 end
 
