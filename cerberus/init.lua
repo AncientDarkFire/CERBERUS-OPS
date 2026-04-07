@@ -159,7 +159,7 @@ local function runSystem(systemName)
         return
     end
     
-    package.path = System.BASE_PATH .. "/presidential/?.lua;" .. System.BASE_PATH .. "/core/?.lua;" .. System.BASE_PATH .. "/lib/?.lua;" .. package.path
+    package.path = System.BASE_PATH .. "/?.lua;" .. System.BASE_PATH .. "/presidential/?.lua;" .. System.BASE_PATH .. "/core/?.lua;" .. System.BASE_PATH .. "/lib/?.lua;" .. package.path
     
     print("[DEBUG] BASE_PATH: " .. tostring(System.BASE_PATH))
     print("[DEBUG] package.path: " .. package.path)
@@ -169,8 +169,32 @@ local function runSystem(systemName)
         nuclear = "nuclear_control",
         msg = "secure_msg",
         docs = "secure_docs",
-        diag = "diag"
+        diag = nil
     }
+    
+    if systemName == "diag" then
+        print("Ejecutando diag...")
+        sleep(0.5)
+        term.clear()
+        term.setTextColor(colors.green)
+        print("============================================")
+        print("    CERBERUS OPS - DIAGNOSTICO")
+        print("============================================")
+        print("")
+        print("ID: " .. os.computerID())
+        print("Uptime: " .. math.floor(os.clock()) .. " segundos")
+        print("")
+        print("Perifericos:")
+        for _, n in ipairs(peripheral.getNames()) do
+            print("  " .. n .. ": " .. peripheral.getType(n))
+        end
+        print("")
+        print("Modem: " .. (peripheral.find("modem") and "OK" or "NO"))
+        print("Monitor: " .. (peripheral.find("monitor") and "OK" or "NO"))
+        print("")
+        print("============================================")
+        return
+    end
     
     local moduleName = paths[systemName]
     if moduleName then
