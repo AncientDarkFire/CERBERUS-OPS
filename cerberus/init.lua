@@ -12,13 +12,10 @@ local System = {
 
 local function findDiskMount()
     local runningProgram = shell.getRunningProgram()
-    if runningProgram then
+    if runningProgram and runningProgram:match("^/disk/") then
         local mountPath = runningProgram:match("^(/disk%d*)")
         if mountPath then
-            local basePath = mountPath .. "/cerberus"
-            if fs.exists(basePath .. "/init.lua") then
-                return basePath
-            end
+            return mountPath .. "/cerberus"
         end
     end
     
@@ -27,15 +24,11 @@ local function findDiskMount()
         local ptype = peripheral.getType(name)
         if ptype == "drive" and disk.isPresent(name) and disk.hasData(name) then
             local mountPath = disk.getMountPath(name)
-            if mountPath then
-                local basePath = mountPath .. "/cerberus"
-                if fs.exists(basePath .. "/init.lua") then
-                    return basePath
-                end
+            if mountPath and fs.exists(mountPath .. "/cerberus/init.lua") then
+                return mountPath .. "/cerberus"
             end
         end
     end
-    
     return nil
 end
 

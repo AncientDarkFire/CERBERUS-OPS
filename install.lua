@@ -17,7 +17,6 @@ local Installer = {
     
     FILES = {
         {path = "/cerberus/init.lua", desc = "Boot principal"},
-        {path = "/cerberus/autorun.lua", desc = "AutoRun"},
         {path = "/cerberus/core/logger.lua", desc = "Sistema de logs"},
         {path = "/cerberus/core/crypto.lua", desc = "Sistema de cifrado"},
         {path = "/cerberus/core/network.lua", desc = "Sistema de red"},
