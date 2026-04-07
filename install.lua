@@ -383,6 +383,7 @@ end
 splash_screen()
 
 -- Buscar drive
+sleep(1)
 local drive_name = find_drive()
 if not drive_name then
   error_screen("ERROR DE HARDWARE", {
@@ -442,17 +443,20 @@ for i, file in ipairs(FILES) do
     local wrote = write_file(disk_path, file.path, content)
     if wrote then
       log_file_row(i, file.path, file.desc, "[ OK ]", C.ok)
+sleep(2)
       installed = installed + 1
     else
       log_file_row(i, file.path, file.desc, "[WRITE]", C.err)
+      sleep(1.5)
       failed = failed + 1
     end
   else
     log_file_row(i, file.path, file.desc, "[ERROR]", C.err)
+    sleep(1.5)
     failed = failed + 1
   end
 
-  sleep(0.1)
+  sleep(2)
 end
 
 -- Diag
@@ -462,7 +466,7 @@ write_diag(disk_path)
 log_file_row(#FILES + 1, "/cerberus/diag.lua", "Diagnostico", "[ OK ]", C.ok)
 draw_total_bar(#FILES + 1, #FILES + 1)
 
-sleep(0.8)
+sleep(1)
 
 -- Pantalla final + reboot
 done_screen(installed, failed)
