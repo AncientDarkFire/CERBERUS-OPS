@@ -1,14 +1,46 @@
 --[[
     CERBERUS OPS - Boot Sequence
-    Versión: 2.1.0
+    Versión: 2.2.0
 ]]
 
 local System = {
     NAME = "CERBERUS OPS",
-    VERSION = "2.1.0",
+    VERSION = "2.2.0",
     SYSTEM_ID = os.computerID(),
-    BASE_PATH = nil
+    BASE_PATH = nil,
+    monitor = nil
 }
+
+_G.CERBERUS = {
+    monitor = nil,
+    modem = nil,
+    systemId = os.computerID(),
+    version = "2.2.0"
+}
+
+local function updateMonitor(title, lines)
+    if not System.monitor then return end
+    
+    System.monitor.setBackgroundColor(colors.black)
+    System.monitor.clear()
+    System.monitor.setTextColor(colors.green)
+    
+    local w, h = System.monitor.getSize()
+    local x = math.floor((w - #title) / 2) + 1
+    System.monitor.setCursorPos(x, 1)
+    System.monitor.write(title)
+    
+    System.monitor.setTextColor(colors.gray)
+    for i = 1, w do System.monitor.write("-") end
+    
+    local y = 3
+    for _, line in ipairs(lines) do
+        System.monitor.setCursorPos(2, y)
+        System.monitor.setTextColor(colors.white)
+        System.monitor.write(line)
+        y = y + 1
+    end
+end
 
 local function findDiskMount()
     local runningProgram = shell.getRunningProgram()
@@ -73,6 +105,22 @@ local function bootSequence()
         print("[OK] Modem detectado")
         modem.open(100)
         print("[OK] Canal 100 abierto")
+        CERBERUS.modem = modem
+    end
+    
+    local monitor = peripheral.find("monitor")
+    if monitor then
+        System.monitor = monitor
+        CERBERUS.monitor = monitor
+        print("[OK] Monitor detectado")
+        System.monitor.setTextScale(1)
+        
+        updateMonitor("CERBERUS OPS", {
+            "Sistema ID: " .. System.SYSTEM_ID,
+            "Version: " .. System.VERSION,
+            "",
+            "SISTEMA LISTO"
+        })
     end
     
     sleep(0.3)
@@ -133,6 +181,17 @@ local function showStatus()
     local monitor = peripheral.find("monitor")
     print("  Monitor: " .. (monitor and "OK" or "NO DETECTADO"))
     print("")
+    
+    if System.monitor then
+        updateMonitor("ESTADO DEL SISTEMA", {
+            "ID: " .. System.SYSTEM_ID,
+            "Version: " .. System.VERSION,
+            "Uptime: " .. uptime .. "s",
+            "Perifericos: " .. #peripheral.getNames(),
+            "Modem: " .. (modem and "OK" or "NO"),
+            "Monitor: OK"
+        })
+    end
 end
 
 local function showPeripherals()
@@ -163,10 +222,27 @@ local function runSystem(systemName)
         diag = basePath .. "/diag"
     }
     
+    local systemNames = {
+        hud = "SENTINEL HUD",
+        nuclear = "CONTROL NUCLEAR",
+        msg = "MENSAJERIA",
+        docs = "DOCUMENTOS",
+        diag = "DIAGNOSTICO"
+    }
+    
     local path = paths[systemName]
     if path then
         if fs.exists(path .. ".lua") then
             print("Ejecutando " .. systemName .. "...")
+            
+            if System.monitor then
+                updateMonitor(systemNames[systemName] or systemName, {
+                    "Cargando sistema...",
+                    "",
+                    "Espere..."
+                })
+            end
+            
             sleep(0.5)
             local module = dofile(path .. ".lua")
             if module and type(module.run) == "function" then

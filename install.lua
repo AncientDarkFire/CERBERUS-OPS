@@ -1,6 +1,6 @@
 --[[
     CERBERUS OPS - Script de Instalacion en Disco
-    Version: 2.1.0
+    Version: 2.2.0
     
     Este script copia todo el sistema a un floppy disk.
     Luego ese disco puede usarse para instalar en otras computadoras.
@@ -11,9 +11,9 @@
 ]]
 
 local Installer = {
-    VERSION = "2.1.0",
+    VERSION = "2.2.0",
     BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main",
-    DISK_NAME = "CERBERUS-OPS 2.1.0",
+    DISK_NAME = "CERBERUS-OPS",
     
     FILES = {
         {path = "/cerberus/init.lua", desc = "Boot principal"},

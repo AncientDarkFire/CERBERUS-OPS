@@ -2,7 +2,7 @@
     Nuclear Control Panel
     CERBERUS OPS - Presidential System
     Nivel de Seguridad: 4 (NEGRO)
-    Versión: 2.1.0
+    Versión: 2.2.0
 ]]
 
 local NuclearControl = {

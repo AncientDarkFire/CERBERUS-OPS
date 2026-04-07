@@ -2,7 +2,7 @@
     Secure Messaging System
     CERBERUS OPS - Presidential System
     Nivel de Seguridad: 3 (ROJO)
-    Versión: 2.1.0
+    Versión: 2.2.0
 ]]
 
 local SecureMsg = {

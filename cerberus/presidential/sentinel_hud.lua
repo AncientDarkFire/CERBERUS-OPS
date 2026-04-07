@@ -2,7 +2,7 @@
     SENTINEL HUD - Panel de Control Central
     CERBERUS OPS - Presidential System
     Nivel de Seguridad: 2 (AMARILLO)
-    Versión: 2.1.0
+    Versión: 2.2.0
 ]]
 
 local SentinelHUD = {
@@ -133,7 +133,7 @@ function SentinelHUD:draw()
     y = y + 1
     term.setCursorPos(2, y)
     term.setTextColor(colors.lime)
-    print("CERBERUS OPS v2.1.0")
+    print("CERBERUS OPS v" .. CERBERUS.version)
 end
 
 function SentinelHUD:run()
