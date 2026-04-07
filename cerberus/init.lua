@@ -159,31 +159,29 @@ local function runSystem(systemName)
         return
     end
     
-    package.path = System.BASE_PATH .. "/core/?.lua;" .. System.BASE_PATH .. "/lib/?.lua;" .. System.BASE_PATH .. "/presidential/?.lua;" .. package.path
+    package.path = System.BASE_PATH .. "/presidential/?.lua;" .. System.BASE_PATH .. "/core/?.lua;" .. System.BASE_PATH .. "/lib/?.lua;" .. package.path
     
     print("[DEBUG] BASE_PATH: " .. tostring(System.BASE_PATH))
     print("[DEBUG] package.path: " .. package.path)
     
     local paths = {
-        hud = System.BASE_PATH .. "/presidential/sentinel_hud",
-        nuclear = System.BASE_PATH .. "/presidential/nuclear_control",
-        msg = System.BASE_PATH .. "/presidential/secure_msg",
-        docs = System.BASE_PATH .. "/presidential/secure_docs",
-        diag = System.BASE_PATH .. "/diag"
+        hud = "sentinel_hud",
+        nuclear = "nuclear_control",
+        msg = "secure_msg",
+        docs = "secure_docs",
+        diag = "diag"
     }
     
-    local path = paths[systemName]
-    if path then
-        print("[DEBUG] Cargando: " .. path .. ".lua")
-        if fs.exists(path .. ".lua") then
+    local moduleName = paths[systemName]
+    if moduleName then
+        print("[DEBUG] Require: " .. moduleName)
+        local ok, module = pcall(require, moduleName)
+        if ok and module and type(module.run) == "function" then
             print("Ejecutando " .. systemName .. "...")
             sleep(0.5)
-            local module = dofile(path .. ".lua")
-            if module and type(module.run) == "function" then
-                module:run()
-            end
+            module:run()
         else
-            print("Error: Sistema no encontrado")
+            print("Error: " .. tostring(module))
         end
     else
         print("Sistema desconocido: " .. systemName)
