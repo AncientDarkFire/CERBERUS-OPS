@@ -17,7 +17,6 @@ local Installer = {
     
     FILES = {
         {path = "/cerberus/init.lua", desc = "Boot principal"},
-        {path = "/cerberus/autorun.lua", desc = "AutoRun"},
         {path = "/cerberus/presidential/sentinel_hud.lua", desc = "SENTINEL HUD"},
         {path = "/cerberus/presidential/nuclear_control.lua", desc = "Control Nuclear"},
         {path = "/cerberus/presidential/secure_msg.lua", desc = "Mensajeria Segura"},
@@ -215,53 +214,6 @@ print("============================================")
     end
 end
 
-function Installer:createAutorunOnDisk(diskPath)
-    local autorun = [[
--- CERBERUS OPS - AutoRun
--- Este archivo se ejecuta automaticamente al insertar el disco
-
-local function getDiskSide()
-    local names = peripheral.getNames()
-    for _, name in ipairs(names) do
-        local ptype = peripheral.getType(name)
-        if ptype == "drive" and disk.isPresent(name) then
-            return name
-        end
-    end
-    return nil
-end
-
-local side = getDiskSide()
-
-if side and disk.hasData(side) then
-    local mountPath = disk.getMountPath(side)
-    sleep(0.5)
-    shell.openTab("lua " .. mountPath .. "/cerberus/init.lua")
-else
-    term.clear()
-    term.setTextColor(colors.red)
-    print("ERROR: Sistema CERBERUS OPS no encontrado")
-    print("")
-    term.setTextColor(colors.white)
-    print("Disco no detectado.")
-    print("")
-end
-]]
-    
-    local fullPath = diskPath .. "/autorun.lua"
-    
-    if fs.exists(fullPath) then
-        fs.delete(fullPath)
-    end
-    
-    local file = fs.open(fullPath, "w")
-    if file then
-        file.write(autorun)
-        file.close()
-        print("  + /autorun.lua")
-    end
-end
-
 function Installer:run()
     self:printHeader()
     
@@ -303,7 +255,6 @@ function Installer:run()
     
     local installed, failed = self:installFilesOnDisk(diskPath)
     self:createDiagOnDisk(diskPath)
-    self:createAutorunOnDisk(diskPath)
     
     print("")
     print("============================================")

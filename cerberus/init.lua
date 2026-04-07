@@ -100,6 +100,7 @@ local function showHelp()
     print("    help     - Esta ayuda")
     print("    status   - Estado del sistema")
     print("    clear    - Limpiar pantalla")
+    print("    shell    - Abrir shell")
     print("    reboot   - Reiniciar computadora")
     print("    shutdown - Apagar computadora")
     print("")
@@ -197,6 +198,13 @@ local function mainMenu()
             
         elseif trimmed == "clear" or trimmed == "cls" then
             term.clear()
+            
+        elseif trimmed == "shell" then
+            print("Abriendo shell...")
+            term.setTextColor(colors.white)
+            shell.run("")
+            term.setTextColor(colors.green)
+            print("")
             
         elseif trimmed == "reboot" then
             print("Reiniciando...")
