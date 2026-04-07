@@ -30,13 +30,13 @@ local function base64Encode(data)
     local padding = (3 - #data % 3) % 3
     data = data .. string.rep("\0", padding)
     for i = 1, #data, 3 do
-        local n = (string.byte(data, i) << 16) + 
-                  (string.byte(data, i + 1) << 8) + 
+        local n = bit.blshift(string.byte(data, i), 16) + 
+                  bit.blshift(string.byte(data, i + 1), 8) + 
                   string.byte(data, i + 2)
-        table.insert(result, b64_chars:sub((n >> 18) + 1, (n >> 18) + 1))
-        table.insert(result, b64_chars:sub(((n >> 12) % 64) + 1, ((n >> 12) % 64) + 1))
-        table.insert(result, b64_chars:sub(((n >> 6) % 64) + 1, ((n >> 6) % 64) + 1))
-        table.insert(result, b64_chars:sub((n % 64) + 1, (n % 64) + 1))
+        table.insert(result, b64_chars:sub(bit.brshift(n, 18) + 1, bit.brshift(n, 18) + 1))
+        table.insert(result, b64_chars:sub(bit.band(bit.brshift(n, 12), 63) + 1, bit.band(bit.brshift(n, 12), 63) + 1))
+        table.insert(result, b64_chars:sub(bit.band(bit.brshift(n, 6), 63) + 1, bit.band(bit.brshift(n, 6), 63) + 1))
+        table.insert(result, b64_chars:sub(bit.band(n, 63) + 1, bit.band(n, 63) + 1))
     end
     for i = 1, padding do result[#result - i + 1] = "=" end
     return table.concat(result)
@@ -52,10 +52,10 @@ local function base64Decode(data)
         local b = b64_chars:find(data:sub(i + 1, i + 1)) - 1
         local c = b64_chars:find(data:sub(i + 2, i + 2)) - 1
         local d = b64_chars:find(data:sub(i + 3, i + 3)) - 1
-        local n = (a << 18) + (b << 12) + ((c >= 0 and c << 6) or 0) + ((d >= 0 and d) or 0)
-        table.insert(result, string.char((n >> 16) % 256))
-        if c >= 0 then table.insert(result, string.char((n >> 8) % 256)) end
-        if d >= 0 then table.insert(result, string.char(n % 256)) end
+        local n = bit.blshift(a, 18) + bit.blshift(b, 12) + ((c >= 0 and bit.blshift(c, 6) or 0) + ((d >= 0 and d) or 0))
+        table.insert(result, string.char(bit.band(bit.brshift(n, 16), 255)))
+        if c >= 0 then table.insert(result, string.char(bit.band(bit.brshift(n, 8), 255))) end
+        if d >= 0 then table.insert(result, string.char(bit.band(n, 255))) end
         i = i + 4
     end
     return table.concat(result):gsub("%z+$", "")
