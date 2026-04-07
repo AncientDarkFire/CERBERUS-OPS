@@ -161,23 +161,29 @@ local function runSystem(systemName)
     
     package.path = System.BASE_PATH .. "/core/?.lua;" .. System.BASE_PATH .. "/lib/?.lua;" .. System.BASE_PATH .. "/presidential/?.lua;" .. package.path
     
+    print("[DEBUG] BASE_PATH: " .. tostring(System.BASE_PATH))
+    print("[DEBUG] package.path: " .. package.path)
+    
     local paths = {
-        hud = "sentinel_hud",
-        nuclear = "nuclear_control",
-        msg = "secure_msg",
-        docs = "secure_docs",
-        diag = "diag"
+        hud = System.BASE_PATH .. "/presidential/sentinel_hud",
+        nuclear = System.BASE_PATH .. "/presidential/nuclear_control",
+        msg = System.BASE_PATH .. "/presidential/secure_msg",
+        docs = System.BASE_PATH .. "/presidential/secure_docs",
+        diag = System.BASE_PATH .. "/diag"
     }
     
-    local moduleName = paths[systemName]
-    if moduleName then
-        local ok, module = pcall(require, moduleName)
-        if ok and module and type(module.run) == "function" then
+    local path = paths[systemName]
+    if path then
+        print("[DEBUG] Cargando: " .. path .. ".lua")
+        if fs.exists(path .. ".lua") then
             print("Ejecutando " .. systemName .. "...")
             sleep(0.5)
-            module:run()
+            local module = dofile(path .. ".lua")
+            if module and type(module.run) == "function" then
+                module:run()
+            end
         else
-            print("Error: Modulo no encontrado o sin funcion run")
+            print("Error: Sistema no encontrado")
         end
     else
         print("Sistema desconocido: " .. systemName)
