@@ -12,10 +12,13 @@ local System = {
 
 local function findDiskMount()
     local runningProgram = shell.getRunningProgram()
-    if runningProgram and runningProgram:match("^/disk/") then
+    if runningProgram then
         local mountPath = runningProgram:match("^(/disk%d*)")
         if mountPath then
-            return mountPath .. "/cerberus"
+            local basePath = mountPath .. "/cerberus"
+            if fs.exists(basePath .. "/init.lua") then
+                return basePath
+            end
         end
     end
     
@@ -24,11 +27,15 @@ local function findDiskMount()
         local ptype = peripheral.getType(name)
         if ptype == "drive" and disk.isPresent(name) and disk.hasData(name) then
             local mountPath = disk.getMountPath(name)
-            if mountPath and fs.exists(mountPath .. "/cerberus/init.lua") then
-                return mountPath .. "/cerberus"
+            if mountPath then
+                local basePath = mountPath .. "/cerberus"
+                if fs.exists(basePath .. "/init.lua") then
+                    return basePath
+                end
             end
         end
     end
+    
     return nil
 end
 
@@ -147,58 +154,27 @@ local function showPeripherals()
 end
 
 local function runSystem(systemName)
-    if not System.BASE_PATH then
-        print("Error: Sistema debe ejecutarse desde disco")
-        return
-    end
-    
-    package.path = System.BASE_PATH .. "/?.lua;" .. System.BASE_PATH .. "/presidential/?.lua;" .. System.BASE_PATH .. "/core/?.lua;" .. System.BASE_PATH .. "/lib/?.lua;" .. package.path
-    
-    print("[DEBUG] BASE_PATH: " .. tostring(System.BASE_PATH))
-    print("[DEBUG] package.path: " .. package.path)
+    local basePath = System.BASE_PATH or "/cerberus"
     
     local paths = {
-        hud = "sentinel_hud",
-        nuclear = "nuclear_control",
-        msg = "secure_msg",
-        docs = "secure_docs",
-        diag = nil
+        hud = basePath .. "/presidential/sentinel_hud",
+        nuclear = basePath .. "/presidential/nuclear_control",
+        msg = basePath .. "/presidential/secure_msg",
+        docs = basePath .. "/presidential/secure_docs",
+        diag = basePath .. "/diag"
     }
     
-    if systemName == "diag" then
-        print("Ejecutando diag...")
-        sleep(0.5)
-        term.clear()
-        term.setTextColor(colors.green)
-        print("============================================")
-        print("    CERBERUS OPS - DIAGNOSTICO")
-        print("============================================")
-        print("")
-        print("ID: " .. os.computerID())
-        print("Uptime: " .. math.floor(os.clock()) .. " segundos")
-        print("")
-        print("Perifericos:")
-        for _, n in ipairs(peripheral.getNames()) do
-            print("  " .. n .. ": " .. peripheral.getType(n))
-        end
-        print("")
-        print("Modem: " .. (peripheral.find("modem") and "OK" or "NO"))
-        print("Monitor: " .. (peripheral.find("monitor") and "OK" or "NO"))
-        print("")
-        print("============================================")
-        return
-    end
-    
-    local moduleName = paths[systemName]
-    if moduleName then
-        print("[DEBUG] Require: " .. moduleName)
-        local ok, module = pcall(require, moduleName)
-        if ok and module and type(module.run) == "function" then
+    local path = paths[systemName]
+    if path then
+        if fs.exists(path .. ".lua") then
             print("Ejecutando " .. systemName .. "...")
             sleep(0.5)
-            module:run()
+            local module = dofile(path .. ".lua")
+            if module and type(module.run) == "function" then
+                module:run()
+            end
         else
-            print("Error: " .. tostring(module))
+            print("Error: Sistema no encontrado")
         end
     else
         print("Sistema desconocido: " .. systemName)
