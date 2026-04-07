@@ -154,27 +154,30 @@ local function showPeripherals()
 end
 
 local function runSystem(systemName)
-    local basePath = System.BASE_PATH or "/cerberus"
+    if not System.BASE_PATH then
+        print("Error: Sistema debe ejecutarse desde disco")
+        return
+    end
+    
+    package.path = System.BASE_PATH .. "/core/?.lua;" .. System.BASE_PATH .. "/lib/?.lua;" .. System.BASE_PATH .. "/presidential/?.lua;" .. package.path
     
     local paths = {
-        hud = basePath .. "/presidential/sentinel_hud",
-        nuclear = basePath .. "/presidential/nuclear_control",
-        msg = basePath .. "/presidential/secure_msg",
-        docs = basePath .. "/presidential/secure_docs",
-        diag = basePath .. "/diag"
+        hud = "sentinel_hud",
+        nuclear = "nuclear_control",
+        msg = "secure_msg",
+        docs = "secure_docs",
+        diag = "diag"
     }
     
-    local path = paths[systemName]
-    if path then
-        if fs.exists(path .. ".lua") then
+    local moduleName = paths[systemName]
+    if moduleName then
+        local ok, module = pcall(require, moduleName)
+        if ok and module and type(module.run) == "function" then
             print("Ejecutando " .. systemName .. "...")
             sleep(0.5)
-            local module = dofile(path .. ".lua")
-            if module and type(module.run) == "function" then
-                module:run()
-            end
+            module:run()
         else
-            print("Error: Sistema no encontrado")
+            print("Error: Modulo no encontrado o sin funcion run")
         end
     else
         print("Sistema desconocido: " .. systemName)
