@@ -337,6 +337,7 @@ function SecureDocs:get_visible_docs(filter)
   local user_level = self.current_user and self.current_user.level or 0
 
   for id, doc in pairs(self.documents) do
+    if not doc then break end
     local visible = doc.sec_level <= user_level
     local match   = true
     if filter and #filter > 0 then
