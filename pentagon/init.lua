@@ -486,14 +486,8 @@ local function network_listener()
   end
 end
 
+boot_sequence()
 parallel.waitForAll(
   main_menu,
   network_listener
 )
-
-term.setBackgroundColor(C.bg)
-term.clear()
-term.setCursorPos(1, 1)
-
-boot_sequence()
-main_menu()
