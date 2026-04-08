@@ -411,6 +411,16 @@ local function handle_message(msg, reply_channel)
 
   elseif msg_type == "STATUS" then
     ClientManager:update_status(msg)
+
+  elseif msg_type == "DEFCON_REQUEST" then
+    if PENTAGON.modem and DefconManager then
+      local client_id = get_client_id(msg)
+      PENTAGON.modem.transmit(100, 100, {
+        type = "DEFCON_UPDATE",
+        level = DefconManager.current_level,
+        timestamp = DefconManager.last_update or os.date("!%Y-%m-%dT%H:%M:%S"),
+      })
+    end
   end
 end
 

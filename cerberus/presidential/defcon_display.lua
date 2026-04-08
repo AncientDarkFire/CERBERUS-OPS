@@ -1,7 +1,7 @@
--- defcon_display.lua - CERBERUS_OPS DEFCON Display v2.2.0
+-- defcon_display.lua - CERBERUS_OPS DEFCON Display v2.4.0
 -- CC:Tweaked 1.20.1 | Compatible Lua 5.2
 -- Muestra el nivel DEFCON actual recibido via modem.
--- Todo el espacio de pantalla se dedica al numero DEFCON.
+-- Sincronizacion en tiempo real con el servidor.
 
 local DefconDisplay = {}
 
@@ -34,6 +34,7 @@ DefconDisplay.modem         = nil
 DefconDisplay.current_level = 5
 DefconDisplay.last_update   = nil
 DefconDisplay.running       = true
+DefconDisplay.sync_interval = 30
 
 -- ============================================================
 --  NUMEROS EN ASCII GRANDES (5 filas, ancho variable)
@@ -137,6 +138,35 @@ end
 
 local function level_desc(level)
   return LEVELS[level] and LEVELS[level].desc or ""
+end
+
+-- ============================================================
+--  SINCRONIZACION EN TIEMPO REAL
+-- ============================================================
+
+function DefconDisplay:request_sync()
+  if not self.modem then return end
+  self.modem.transmit(100, 100, {
+    type = "DEFCON_REQUEST",
+    from = os.computerID(),
+  })
+end
+
+function DefconDisplay:sync_listener()
+  while self.running do
+    local ev, side, channel, replyChannel, message = os.pullEvent("modem_message")
+    if type(message) == "table" then
+      if message.type == "DEFCON_UPDATE" then
+        local new_level = math.max(1, math.min(5, tonumber(message.level) or 5))
+        if new_level ~= self.current_level then
+          self.current_level = new_level
+          self.last_update = message.timestamp
+          self:draw()
+          self:update_monitor()
+        end
+      end
+    end
+  end
 end
 
 -- ============================================================
@@ -380,19 +410,24 @@ function DefconDisplay:run()
   end
 
   w, h = term.getSize()
+  self:request_sync()
   self:draw()
   self:update_monitor()
 
   local anim_timer = os.startTimer(0.5)
+  local sync_timer = os.startTimer(self.sync_interval)
 
   while self.running do
     local ev, p1, p2, p3, p4 = os.pullEventRaw()
 
-    if ev == "timer" then
-      -- Redibujar para pulso animado y reloj
+    if ev == "timer" and p1 == anim_timer then
       self:draw()
       self:update_monitor()
       anim_timer = os.startTimer(0.5)
+
+    elseif ev == "timer" and p1 == sync_timer then
+      self:request_sync()
+      sync_timer = os.startTimer(self.sync_interval)
 
     elseif ev == "modem_message" then
       local msg = p4
