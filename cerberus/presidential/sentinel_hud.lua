@@ -142,6 +142,7 @@ function SentinelHUD:update_monitor()
   for x = 1, mw do mw_at(x, 2, "-", C.dim, C.bg) end
 
   -- Status line
+  if not self.systems then self.systems = {} end
   local on, off, unk = sys_counts(self.systems)
   local state_ok = (off == 0 and unk == 0)
   local state_col = state_ok and C.ok or (off > 0 and C.err or C.warn)
