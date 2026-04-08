@@ -38,6 +38,14 @@ DefconManager.api_url        = "http://api.minefieldmods.com:25726/api/defcon"
 DefconManager.running        = false
 
 -- ============================================================
+--  INICIALIZACION
+-- ============================================================
+
+function DefconManager:init(modem)
+  self.modem = modem
+end
+
+-- ============================================================
 --  UTILIDADES DE DIBUJO
 -- ============================================================
 local w, h
