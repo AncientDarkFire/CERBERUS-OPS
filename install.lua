@@ -101,7 +101,7 @@ end
 --  DATOS DEL INSTALADOR
 -- ============================================================
 
-local VERSION  = "2.3.5"
+local VERSION  = "2.4.0"
 local BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main"
 local DISK_NAME = "CERBERUS-OPS"
 
@@ -111,6 +111,7 @@ local FILES = {
   { path = "/cerberus/presidential/nuclear_control.lua", desc = "Control Nuclear"    },
   { path = "/cerberus/presidential/secure_msg.lua",   desc = "Mensajeria Segura"     },
   { path = "/cerberus/presidential/secure_docs.lua",  desc = "Documentos Clasif."    },
+  { path = "/cerberus/presidential/defcon_display.lua", desc = "Sistema DEFCON"      },
 }
 
 -- ============================================================

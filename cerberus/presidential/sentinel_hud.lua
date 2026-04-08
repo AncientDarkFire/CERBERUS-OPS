@@ -113,6 +113,26 @@ local PULSE = { "*", "+", "o", "+" }
 local function pulse() return PULSE[(tick % #PULSE) + 1] end
 
 -- ============================================================
+--  HELPERS DE ESTADO
+-- ============================================================
+
+local function sys_counts(systems)
+  local on, off, unk = 0, 0, 0
+  for _, s in ipairs(systems) do
+    if     s.status == "ONLINE"  then on  = on  + 1
+    elseif s.status == "OFFLINE" then off = off + 1
+    else                              unk = unk + 1 end
+  end
+  return on, off, unk
+end
+
+local function status_style(status)
+  if status == "ONLINE"  then return C.ok,  "ONLINE " end
+  if status == "OFFLINE" then return C.err, "OFFLIN!" end
+  return C.dim, "  ---  "
+end
+
+-- ============================================================
 --  MONITOR EXTERNO
 -- ============================================================
 
@@ -143,6 +163,7 @@ function SentinelHUD:update_monitor()
 
   -- Status line
   if not self.systems then self.systems = {} end
+
   local on, off, unk = sys_counts(self.systems)
   local state_ok = (off == 0 and unk == 0)
   local state_col = state_ok and C.ok or (off > 0 and C.err or C.warn)
@@ -238,26 +259,6 @@ function SentinelHUD:scan_all()
       end
     end
   end
-end
-
--- ============================================================
---  HELPERS DE ESTADO
--- ============================================================
-
-local function sys_counts(systems)
-  local on, off, unk = 0, 0, 0
-  for _, s in ipairs(systems) do
-    if     s.status == "ONLINE"  then on  = on  + 1
-    elseif s.status == "OFFLINE" then off = off + 1
-    else                              unk = unk + 1 end
-  end
-  return on, off, unk
-end
-
-local function status_style(status)
-  if status == "ONLINE"  then return C.ok,  "ONLINE " end
-  if status == "OFFLINE" then return C.err, "OFFLIN!" end
-  return C.dim, "  ---  "
 end
 
 -- ============================================================

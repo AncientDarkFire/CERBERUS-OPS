@@ -74,6 +74,94 @@ function ServerHUD:set_modules(cm, as, nh, modem)
   self.modem = modem or _G.PENTAGON.modem
 end
 
+function ServerHUD:update_monitor()
+  local mon = _G.PENTAGON and _G.PENTAGON.monitor
+  if not mon then return end
+
+  local mw, mh = mon.getSize()
+  mon.setBackgroundColor(C.bg)
+  mon.clear()
+
+  local function mw_at(x, y, text, fg, bg)
+    mon.setBackgroundColor(bg or C.bg)
+    mon.setTextColor(fg or C.title)
+    mon.setCursorPos(x, y)
+    mon.write(text)
+  end
+
+  local function mw_centered(y, text, fg, bg)
+    local mx = math.max(1, math.floor((mw - #text) / 2) + 1)
+    mw_at(mx, y, text, fg, bg)
+  end
+
+  -- Header
+  for x = 1, mw do mw_at(x, 1, " ", C.panel, C.accent) end
+  mw_centered(1, " PENTAGON // SERVIDOR ", C.panel, C.accent)
+  for x = 1, mw do mw_at(x, 2, "-", C.dim, C.bg) end
+
+  -- Stats
+  local client_count = 0
+  local online_count = 0
+  local auth_pending = 0
+
+  if self.ClientManager then
+    client_count = self.ClientManager:get_count()
+    online_count = self.ClientManager:get_online_count()
+  end
+  if self.AuthServer then
+    auth_pending = self.AuthServer:get_pending_count()
+  end
+
+  local status_col = (online_count > 0) and C.ok or C.dim
+  local status_label = (online_count > 0) and "ACTIVO" or "INACTIVO"
+
+  mw_at(2, 3, "ID:" .. os.computerID(), C.dim, C.bg)
+  local status_txt = status_label .. " [" .. online_count .. "/" .. client_count .. "]"
+  mw_at(mw - #status_txt - 1, 3, status_txt, status_col, C.bg)
+
+  for x = 1, mw do mw_at(x, 4, "-", C.dim, C.bg) end
+
+  -- Stats panel
+  local y = 6
+  local panel_pw = math.min(mw - 4, 50)
+  local panel_px = 3
+
+  mw_at(panel_px, y, "[ ESTADO ]", C.accent, C.bg)
+  y = y + 2
+  mw_at(panel_px, y, "Clientes : " .. online_count .. "/" .. client_count, status_col, C.bg)
+  y = y + 1
+  local auth_col = auth_pending > 0 and C.warn or C.ok
+  mw_at(panel_px, y, "Auth pend: " .. auth_pending, auth_col, C.bg)
+  y = y + 1
+  mw_at(panel_px, y, "Modem    : " .. (self.modem and "ACTIVO" or "INACTIVO"), self.modem and C.ok or C.err, C.bg)
+  y = y + 2
+
+  -- Clients list
+  local clients = {}
+  if self.ClientManager then
+    clients = self.ClientManager:get_all()
+  end
+
+  mw_at(panel_px, y, "CLIENTES:", C.accent, C.bg)
+  y = y + 1
+  if #clients == 0 then
+    mw_at(panel_px, y, "(ninguno)", C.dim, C.bg)
+  else
+    for i = 1, math.min(6, #clients) do
+      local c = clients[i]
+      local status = c.online and "ONLINE" or "OFFLINE"
+      local ccol = c.online and C.ok or C.err
+      local line = "ID:" .. c.id .. " [" .. (c.type or "?") .. "] " .. status
+      mw_at(panel_px, y, line:sub(1, mw - 6), ccol, C.bg)
+      y = y + 1
+    end
+  end
+
+  -- Footer
+  for x = 1, mw do mw_at(x, mh, " ", C.title, C.panel) end
+  mw_centered(mh, " PENTAGON v" .. (_G.PENTAGON and _G.PENTAGON.version or "?"), C.panel, C.panel)
+end
+
 function ServerHUD:draw()
   w, h = term.getSize()
   tick = tick + 1
@@ -184,6 +272,7 @@ function ServerHUD:run()
   w, h = term.getSize()
 
   self:draw()
+  self:update_monitor()
 
   local anim_timer = os.startTimer(2)
 
@@ -193,6 +282,7 @@ function ServerHUD:run()
     if ev == "timer" then
       if p1 == anim_timer then
         self:draw()
+        self:update_monitor()
         anim_timer = os.startTimer(2)
       end
 

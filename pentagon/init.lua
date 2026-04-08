@@ -3,7 +3,7 @@
 
 local Pentagon = {}
 
-local VERSION   = "2.3.5"
+local VERSION   = "2.4.0"
 local SYSTEM_ID = os.computerID()
 local BASE_PATH = nil
 
@@ -232,10 +232,12 @@ end
 local ClientManager = dofile(BASE_PATH .. "/client_manager.lua")
 local AuthServer    = dofile(BASE_PATH .. "/auth_server.lua")
 local NetworkHub    = dofile(BASE_PATH .. "/network_hub.lua")
+local DefconManager = dofile(BASE_PATH .. "/defcon_manager.lua")
 
 ClientManager:init(PENTAGON.modem)
 AuthServer:init(PENTAGON.modem)
 NetworkHub:init(PENTAGON.modem)
+DefconManager:init(PENTAGON.modem)
 
 local function cmd_help()
   out_sep()
@@ -251,6 +253,7 @@ local function cmd_help()
   out_push("  auth            Autorizaciones pendientes", C.dim)
   out_push("  network         Estado de red",          C.dim)
   out_push("  hud             Panel de control",        C.dim)
+  out_push("  defcon          Sistema DEFCON",          C.accent)
   out_sep()
 end
 
@@ -443,7 +446,14 @@ local function main_menu()
     elseif cmd == "shell" then
       out_push("  Abriendo shell nativo...", C.warn)
       if mon then term.redirect(native) end
-      shell.run("")
+      term.setBackgroundColor(colors.black)
+      term.clear()
+      term.setCursorPos(1, 1)
+      print("Shell PENTAGON - Escribe 'exit' para volver")
+      print()
+      shell.run("shell")
+      term.setBackgroundColor(C.bg)
+      term.clear()
       if mon then term.redirect(mon) end
       w, h = term.getSize()
       draw_shell_chrome()
@@ -472,6 +482,9 @@ local function main_menu()
 
     elseif cmd == "hud" then
       run_module("hud")
+
+    elseif cmd == "defcon" then
+      DefconManager:update_monitor()
 
     else
       out_push("  Comando desconocido: " .. cmd, C.err)

@@ -4,7 +4,7 @@
 -- ============================================================
 --  SISTEMA GLOBAL
 -- ============================================================
-local VERSION   = "2.3.5"
+local VERSION   = "2.4.0"
 local SYSTEM_ID = os.computerID()
 local BASE_PATH = nil   -- se resuelve en boot
 
@@ -334,6 +334,7 @@ local function cmd_help()
   out_push("  nuclear         Control Nuclear",       C.accent)
   out_push("  msg             Mensajeria Segura",     C.accent)
   out_push("  docs            Documentos Clasif.",    C.accent)
+  out_push("  defcon          Sistema DEFCON",         C.accent)
   out_push("  diag            Diagnostico",           C.accent)
   out_sep()
   out_push("  peripherals     Ver perifericos",       C.dim)
@@ -392,11 +393,12 @@ local function run_system(key)
     nuclear = base .. "/presidential/nuclear_control",
     msg     = base .. "/presidential/secure_msg",
     docs    = base .. "/presidential/secure_docs",
+    defcon  = base .. "/presidential/defcon_display",
     diag    = base .. "/diag",
   }
   local labels = {
     hud = "SENTINEL HUD", nuclear = "CONTROL NUCLEAR",
-    msg = "MENSAJERIA",   docs    = "DOCUMENTOS", diag = "DIAGNOSTICO",
+    msg = "MENSAJERIA",   docs    = "DOCUMENTOS", defcon = "DEFCON", diag = "DIAGNOSTICO",
   }
 
   local path = paths[key]
@@ -488,7 +490,14 @@ local function main_menu()
     elseif cmd == "shell" then
       out_push("  Abriendo shell nativo...", C.warn)
       if mon then term.redirect(native) end
-      shell.run("")
+      term.setBackgroundColor(colors.black)
+      term.clear()
+      term.setCursorPos(1, 1)
+      print("Shell CERBERUS - Escribe 'exit' para volver")
+      print()
+      shell.run("shell")
+      term.setBackgroundColor(C.bg)
+      term.clear()
       if mon then term.redirect(mon) end
       w, h = term.getSize()
       draw_shell_chrome()
@@ -522,6 +531,9 @@ local function main_menu()
 
     elseif cmd == "diag" or cmd == "diagnostic" then
       run_system("diag")
+
+    elseif cmd == "defcon" then
+      run_system("defcon")
 
     elseif cmd == "peripherals" or cmd == "peri" then
       cmd_peripherals()

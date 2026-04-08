@@ -101,7 +101,7 @@ end
 --  DATOS DEL INSTALADOR
 -- ============================================================
 
-local VERSION  = "2.3.0"
+local VERSION  = "2.4.0"
 local BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main"
 local DISK_NAME = "PENTAGON-SRV"
 
@@ -111,6 +111,7 @@ local FILES = {
   { path = "/pentagon/auth_server.lua",    desc = "Servidor de Auth"       },
   { path = "/pentagon/network_hub.lua",    desc = "Centro de Red"          },
   { path = "/pentagon/server_hud.lua",     desc = "Panel de Control"       },
+  { path = "/pentagon/defcon_manager.lua", desc = "Gestor DEFCON"          },
 }
 
 -- ============================================================
