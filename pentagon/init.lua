@@ -123,6 +123,14 @@ local function find_disk_mount()
       end
     end
   end
+  -- Fallback: usar la ruta del script actual
+  local prog_path = shell.getRunningProgram()
+  if prog_path then
+    local base = prog_path:match("^(.+)/init%.lua$")
+    if base and fs.exists(base .. "/client_manager.lua") then
+      return base
+    end
+  end
   return nil
 end
 
