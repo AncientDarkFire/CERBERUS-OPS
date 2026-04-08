@@ -231,6 +231,7 @@ function NuclearControl:request_auth()
   self.modem.transmit(100, 101, {
     type   = "AUTH_REQUEST",
     system = "NUCLEAR",
+    client_id = os.computerID(),
     id     = os.computerID(),
   })
 

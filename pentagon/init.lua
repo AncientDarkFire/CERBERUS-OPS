@@ -349,7 +349,7 @@ local function run_module(key)
     local module = dofile(path .. ".lua")
     if module and type(module.run) == "function" then
       if key == "hud" then
-        module:set_modules(ClientManager, AuthServer, NetworkHub)
+        module:set_modules(ClientManager, AuthServer, NetworkHub, PENTAGON.modem)
       end
       module:run()
     end
@@ -372,16 +372,20 @@ local function draw_prompt()
   wa(2, h - 1, "PENTAGON> ", C.ok, C.bg)
 end
 
+local function get_client_id(msg)
+  return msg.client_id or msg.from or msg.id or "?"
+end
+
 local function handle_message(msg, reply_channel)
   local msg_type = msg.type
 
   if msg_type == "REGISTER" then
     ClientManager:register_client(msg)
-    out_push("Nuevo cliente: " .. (msg.client_id or msg.from) .. " [" .. (msg.system or "UNKNOWN") .. "]", C.ok)
+    out_push("Nuevo cliente: " .. get_client_id(msg) .. " [" .. (msg.system or "UNKNOWN") .. "]", C.ok)
 
   elseif msg_type == "AUTH_REQUEST" then
     AuthServer:add_request(msg)
-    out_push("Auth request: " .. (msg.system or "UNKNOWN") .. " de ID:" .. (msg.client_id or msg.from), C.warn)
+    out_push("Auth request: " .. (msg.system or "UNKNOWN") .. " de ID:" .. get_client_id(msg), C.warn)
 
   elseif msg_type == "PING" then
     -- Responder PING con PONG
@@ -393,7 +397,7 @@ local function handle_message(msg, reply_channel)
         from = os.computerID(),
       })
     end
-    ClientManager:update_client(msg.from)
+    ClientManager:update_client(get_client_id(msg))
 
   elseif msg_type == "MSG_FORWARD" then
     NetworkHub:forward_message(msg)

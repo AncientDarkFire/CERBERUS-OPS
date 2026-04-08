@@ -67,10 +67,11 @@ local function draw_box(x1, y1, x2, y2, fg, bg)
   end
 end
 
-function ServerHUD:set_modules(cm, as, nh)
+function ServerHUD:set_modules(cm, as, nh, modem)
   self.ClientManager = cm
   self.AuthServer = as
   self.NetworkHub = nh
+  self.modem = modem or _G.PENTAGON.modem
 end
 
 function ServerHUD:draw()
