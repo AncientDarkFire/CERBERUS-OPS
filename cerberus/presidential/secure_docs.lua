@@ -593,11 +593,11 @@ function SecureDocs:create_ui()
 
   -- Contenido multilinea
   hln(14, "-", C.dim, C.bg, px+1, px+pw-2)
-  wa(px+2, 15, "Contenido (linea vacia = terminar):", C.dim, C.bg)
+  wa(px+2, 15, "Contenido (Enter vacio = terminar):", C.dim, C.bg)
 
   local lines  = {}
   local input_y = 16
-  local max_rows = h - 5 - input_y
+  local max_rows = math.max(5, h - input_y - 4)
 
   while #lines < max_rows do
     local row_y = input_y + #lines
@@ -612,14 +612,14 @@ function SecureDocs:create_ui()
   end
 
   if #lines == 0 then
-    wc(h-3, "[ Cancelado - sin contenido ]", C.dim, C.bg)
-    sleep(1)
+    wa(px+2, input_y, "[ Sin contenido - documento cancelado ]", C.dim, C.bg)
+    sleep(1.5)
     return
   end
 
   local content = table.concat(lines, "\n")
   local doc_id  = self:create_document(title, content, sec_level)
-  wc(h-3, "[ Documento guardado: " .. doc_id:sub(1,10) .. "... ]", C.ok, C.bg)
+  wa(px+2, input_y, "[ Guardado: " .. tostring(doc_id):sub(1,15) .. " ]", C.ok, C.bg)
   sleep(1.5)
 end
 
