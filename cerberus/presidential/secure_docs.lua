@@ -336,11 +336,17 @@ function SecureDocs:get_visible_docs(filter)
   local results = {}
   local user_level = self.current_user and self.current_user.level or 0
 
+  if not self.documents then
+    return results
+  end
+
   for id, doc in pairs(self.documents) do
-    if not doc then break end
+    if not doc or not doc.sec_level then
+      break
+    end
     local visible = doc.sec_level <= user_level
-    local match   = true
-    if filter and #filter > 0 then
+    local match = true
+    if filter and #filter > 0 and doc.title and doc.author then
       match = doc.title:lower():find(filter:lower(), 1, true) ~= nil
            or doc.author:lower():find(filter:lower(), 1, true) ~= nil
     end
@@ -399,24 +405,25 @@ function SecureDocs:draw_list(docs, page, selected, filter)
     local row_y   = 6
 
     for i = start_i, end_i do
-      local doc    = docs[i]
+      local doc = docs[i]
+      if not doc then break end
       local is_sel = (i == selected)
       local row_bg = is_sel and C.panel or C.bg
-      local sl     = SEC_LEVELS[doc.sec_level] or SEC_LEVELS[1]
+      local sl = SEC_LEVELS[doc.sec_level] or SEC_LEVELS[1]
 
       wa(1, row_y, string.rep(" ", w), C.dim, row_bg)
 
       -- Indice
       wa(2, row_y, string.format("%2d", i), is_sel and C.title or C.dim, row_bg)
 
-      -- Nivel (coloreado segun clasificacion)
+      -- nivel (coloreado segun clasificacion)
       local lv_col = is_sel and C.title or sl.color
       wa(5, row_y, string.format("%-9s", sl.name), lv_col, row_bg)
 
       -- Titulo (truncado al espacio disponible)
       local max_title = w - 22
-      local title_s   = doc.title:sub(1, max_title)
-      if #doc.title > max_title then title_s = title_s:sub(1,-2) .. "~" end
+      local title_s = (doc.title or ""):sub(1, max_title)
+      if #(doc.title or "") > max_title then title_s = title_s:sub(1,-2) .. "~" end
       wa(15, row_y, title_s, is_sel and C.title or C.title, row_bg)
 
       -- Autor
