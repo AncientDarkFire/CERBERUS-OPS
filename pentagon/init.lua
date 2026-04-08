@@ -3,7 +3,7 @@
 
 local Pentagon = {}
 
-local VERSION   = "2.3.0"
+local VERSION   = "2.3.5"
 local SYSTEM_ID = os.computerID()
 local BASE_PATH = nil
 
@@ -494,3 +494,6 @@ parallel.waitForAll(
 term.setBackgroundColor(C.bg)
 term.clear()
 term.setCursorPos(1, 1)
+
+boot_sequence()
+main_menu()
