@@ -327,9 +327,11 @@ local function run_module(key)
   local base = BASE_PATH or "/pentagon"
   local paths = {
     hud = base .. "/server_hud",
+    defcon = base .. "/defcon_manager",
   }
   local labels = {
     hud = "PANEL DE CONTROL",
+    defcon = "CONTROL DEFCON",
   }
 
   local path = paths[key]
@@ -353,6 +355,8 @@ local function run_module(key)
     if module and type(module.run) == "function" then
       if key == "hud" then
         module:set_modules(ClientManager, AuthServer, NetworkHub, PENTAGON.modem)
+      elseif key == "defcon" then
+        module:init(PENTAGON.modem)
       end
       module:run()
     end
@@ -484,7 +488,7 @@ local function main_menu()
       run_module("hud")
 
     elseif cmd == "defcon" then
-      DefconManager:update_monitor()
+      run_module("defcon")
 
     else
       out_push("  Comando desconocido: " .. cmd, C.err)

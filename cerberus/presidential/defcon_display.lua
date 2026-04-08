@@ -13,6 +13,9 @@ local C = {
   warn     = colors.yellow,
   err      = colors.red,
   cyan     = colors.cyan,
+  green    = colors.green,
+  lime     = colors.lime,
+  orange   = colors.orange,
 }
 
 DefconDisplay.modem = nil
@@ -71,93 +74,77 @@ function DefconDisplay:get_level_message(level)
   return "DESCONOCIDO"
 end
 
-function DefconDisplay:draw_banner()
+function DefconDisplay:draw_ascii(level, color, msg)
   w, h = term.getSize()
   term.setBackgroundColor(C.bg)
   term.clear()
 
-  local level = self.current_level
-  local color = self:get_level_color(level)
-  local msg = self:get_level_message(level)
+  local panel_w = math.min(50, w - 4)
+  local panel_x = math.floor((w - panel_w) / 2)
+  local panel_h = h - 6
+  local panel_y = 4
 
-  -- Header
   hln(1, " ", C.panel, C.accent)
-  wc(1, "  DEFCON // ESTADO DE ALERTA  ", C.panel, C.accent)
+  wc(1, "  DEFCON // ESTADO DE ALERTA NACIONAL  ", C.panel, C.accent)
   hln(2, "-", C.dim, C.bg)
 
-  -- Info
-  wa(2, 3, "ID:" .. os.computerID(), C.dim, C.bg)
+  wa(2, 3, "CERBERUS OPS // ID:" .. os.computerID(), C.dim, C.bg)
   if self.last_update then
-    wa(w - #self.last_update - 1, 3, self.last_update, C.dim, C.bg)
+    local ts = self.last_update
+    wa(w - #ts - 1, 3, ts, C.dim, C.bg)
   end
 
-  -- Barra de estado
-  local bar_y = 5
-  local bar_w = w - 10
-  wa(5, bar_y, "[", C.dim, C.bg)
-  wa(w - 4, bar_y, "]", C.dim, C.bg)
+  local box_x = panel_x + 1
+  local box_w = panel_w - 2
+
+  wa(box_x, panel_y, "/========================================\\", color, C.bg)
+  wa(box_x, panel_y + 1, "|", color, C.bg)
+  wa(box_x + box_w - 1, panel_y + 1, "|", color, C.bg)
+  wa(box_x, panel_y + 2, "|  _____ _____ _____ _____ _____  |", color, C.bg)
+  wa(box_x, panel_y + 3, "| |     |   __|     |   __|  _  | |", color, C.bg)
+  wa(box_x, panel_y + 4, "| |   --|   __|   --|   __|     | |", color, C.bg)
+  wa(box_x, panel_y + 5, "| |_____|_____|_____|_____|__|__| |", color, C.bg)
+  wa(box_x, panel_y + 6, "|                                  |", color, C.bg)
+
+  local num_str = tostring(level)
+  local num_x = box_x + 2 + math.floor((box_w - 4 - #num_str) / 2)
+  wa(num_x, panel_y + 6, "[" .. num_str .. "]  " .. msg, C.title, color)
+
+  wa(box_x, panel_y + 7, "|__________________________________|", color, C.bg)
+  wa(box_x, panel_y + 8, "|", color, C.bg)
+  wa(box_x + box_w - 1, panel_y + 8, "|", color, C.bg)
+
+  local status_y = panel_y + 10
+  wa(box_x, status_y, "+--[ ESTADO DE ALERTA ]--+", color, C.bg)
+  wa(box_x, status_y + 1, "|                          |", color, C.bg)
+
+  local bar_y = status_y + 2
+  local bar_w = box_w - 4
+  wa(box_x + 2, bar_y, "[", color, C.bg)
+  wa(box_x + bar_w, bar_y, "]", color, C.bg)
 
   for i = 1, bar_w - 2 do
-    local lvl_at_pos = math.ceil(i / (bar_w - 2) * 5)
-    local col = self:get_level_color(lvl_at_pos)
-    if lvl_at_pos <= level then
-      wa(5 + i, bar_y, "#", col, C.bg)
-    else
-      wa(5 + i, bar_y, ".", C.dim, C.bg)
-    end
+    local lvl = math.ceil(i / (bar_w - 2) * 5)
+    local lvl_col = self:get_level_color(lvl)
+    wa(box_x + 2 + i, bar_y, lvl <= level and "#" or ".", lvl <= level and lvl_col or C.dim, C.bg)
   end
 
-  -- Numeros de niveles
-  local y_levels = bar_y + 2
+  wa(box_x, status_y + 3, "|                          |", color, C.bg)
+  wa(box_x, status_y + 4, "|  ", color, C.bg)
   for i = 1, 5 do
-    local x_pos = math.floor((w - 10) * (i - 1) / 4) + 5
-    local col = self:get_level_color(i)
-    wa(x_pos, y_levels, tostring(i), col, C.bg)
+    local lvl_col = self:get_level_color(i)
+    wa(box_x + 2 + (i - 1) * 7, status_y + 4, " " .. i .. " ", i <= level and C.title or C.dim, i <= level and lvl_col or C.dim)
   end
+  wa(box_x + box_w - 2, status_y + 4, " |", color, C.bg)
 
-  -- Panel central grande
-  hln(y_levels + 2, "-", C.dim, C.bg)
+  wa(box_x, status_y + 5, "|                          |", color, C.bg)
+  wa(box_x, status_y + 6, "+--------------------------+/", color, C.bg)
 
-  local panel_h = h - y_levels - 6
-  local panel_w = math.min(40, w - 4)
-  local panel_px = math.floor((w - panel_w) / 2) + 1
-  local panel_py = y_levels + 4
+  wa(box_x + 1, status_y + 7, "Presione [Q] para salir", C.dim, C.bg)
 
-  -- Dibujar panel con color del nivel
-  for y = panel_py, panel_py + panel_h do
-    for x = panel_px, panel_px + panel_w - 1 do
-      wa(x, y, " ", color, C.bg)
-    end
-  end
-
-  -- Borde
-  wa(panel_px, panel_py, "+", C.title, color)
-  wa(panel_px + panel_w - 1, panel_py, "+", C.title, color)
-  wa(panel_px, panel_py + panel_h, "+", C.title, color)
-  wa(panel_px + panel_w - 1, panel_py + panel_h, "+", C.title, color)
-
-  for x = panel_px + 1, panel_px + panel_w - 2 do
-    wa(x, panel_py, "-", C.title, color)
-    wa(x, panel_py + panel_h, "-", C.title, color)
-  end
-  for y = panel_py + 1, panel_py + panel_h - 1 do
-    wa(panel_px, y, "|", C.title, color)
-    wa(panel_px + panel_w - 1, y, "|", C.title, color)
-  end
-
-  -- DEFCON texto
-  local y_defcon = panel_py + math.floor(panel_h / 4)
-  local y_nivel = panel_py + math.floor(panel_h / 2) - 1
-  local y_msg = panel_py + math.floor(panel_h * 3 / 4)
-
-  wc(y_defcon, "DEFCON", C.title, color)
-  wc(y_nivel, tostring(level), C.title, color)
-  wc(y_msg, msg, C.title, color)
-
-  -- Footer
   hln(h, " ", C.title, C.panel)
   wa(2, h, "CERBERUS OPS // DoD // MineField Mods", C.title, C.panel)
-  wa(w - 10, h, "[Q] Salir", C.dim, C.panel)
+  wa(w - 12, h, "DEFCON:" .. level, color, C.panel)
 end
 
 function DefconDisplay:update_monitor()
@@ -165,118 +152,82 @@ function DefconDisplay:update_monitor()
   if not mon then return end
 
   local mw, mh = mon.getSize()
-  mon.setBackgroundColor(C.bg)
-  mon.clear()
-
   local level = self.current_level
   local color = self:get_level_color(level)
   local msg = self:get_level_message(level)
 
-  -- Borde decorativo
+  mon.setBackgroundColor(C.bg)
+  mon.clear()
+
+  local bw = math.min(50, mw - 4)
+  local bx = math.floor((mw - bw) / 2) + 1
+
   for x = 1, mw do
-    mon.setBackgroundColor(color)
-    mon.setTextColor(C.bg)
+    mon.setBackgroundColor(C.panel)
+    mon.setTextColor(C.accent)
     mon.setCursorPos(x, 1)
-    mon.write("=")
-    mon.setCursorPos(x, 3)
     mon.write("=")
     mon.setCursorPos(x, mh)
     mon.write("=")
-    mon.setCursorPos(x, mh - 2)
-    mon.write("=")
-  end
-  for y = 1, mh do
-    mon.setCursorPos(1, y)
-    mon.write("|")
-    mon.setCursorPos(mw, y)
-    mon.write("|")
   end
 
-  -- Esquinas decorativas
-  mon.setCursorPos(1, 1)
-  mon.write("+")
-  mon.setCursorPos(mw, 1)
-  mon.write("+")
-  mon.setCursorPos(1, 3)
-  mon.write("+")
-  mon.setCursorPos(mw, 3)
-  mon.write("+")
-  mon.setCursorPos(1, mh - 2)
-  mon.write("+")
-  mon.setCursorPos(mw, mh - 2)
-  mon.write("+")
-  mon.setCursorPos(1, mh)
-  mon.write("+")
-  mon.setCursorPos(mw, mh)
-  mon.write("+")
+  mon.setTextColor(color)
+  mon.setCursorPos(bx, 2)
+  mon.write("/========================================\\")
+  mon.setCursorPos(bx, 3)
+  mon.write("|  _____ _____ _____ _____ _____        |")
+  mon.setCursorPos(bx, 4)
+  mon.write("| |     |   __|     |   __|  _  |       |")
+  mon.setCursorPos(bx, 5)
+  mon.write("| |   --|   __|   --|   __|     |       |")
+  mon.setCursorPos(bx, 6)
+  mon.write("| |_____|_____|_____|_____|__|__|       |")
+  mon.setCursorPos(bx, 7)
+  mon.write("|======================================|")
 
-  -- Area central con color del nivel
-  for y = 4, mh - 3 do
-    for x = 2, mw - 1 do
-      mon.setBackgroundColor(color)
-      mon.setTextColor(C.bg)
-      mon.setCursorPos(x, y)
-      mon.write(" ")
-    end
-  end
+  local num_str = "  [ " .. level .. " ]  " .. msg
+  local nx = math.max(1, math.floor((mw - #num_str) / 2) + 1)
+  mon.setTextColor(C.title)
+  mon.setCursorPos(nx, 8)
+  mon.write(num_str)
 
-  -- DEFCON texto grande
-  local defcon_y = math.floor(mh / 6)
-  local defcon_text = "DEFCON"
-  local defcon_x = math.max(1, math.floor((mw - #defcon_text) / 2) + 1)
-  mon.setCursorPos(defcon_x, defcon_y)
-  mon.setTextColor(C.bg)
-  mon.write(defcon_text)
+  mon.setTextColor(color)
+  mon.setCursorPos(bx, 9)
+  mon.write("\\========================================/")
 
-  -- Numero grande
-  local num_y = math.floor(mh / 3)
-  local num_text = tostring(level)
-  local num_x = math.max(1, math.floor((mw - #num_text) / 2) + 1)
-  mon.setTextColor(C.bg)
-  mon.setCursorPos(num_x, num_y)
-  mon.write(num_text)
-
-  -- Mensaje
-  local msg_y = math.floor(mh * 2 / 3)
-  local msg_x = math.max(1, math.floor((mw - #msg) / 2) + 1)
-  mon.setCursorPos(msg_x, msg_y)
-  mon.write(msg)
-
-  -- Barra de niveles
-  local bar_y = mh - 4
-  local bar_w = mw - 6
-  local bar_x = 3
-
-  mon.setCursorPos(bar_x, bar_y)
-  mon.setBackgroundColor(C.bg)
+  local bar_y = 11
+  local bar_w = bw - 6
+  mon.setCursorPos(bx + 2, bar_y)
   mon.setTextColor(C.dim)
   mon.write("[")
   for i = 1, bar_w - 2 do
     local lvl = math.ceil(i / (bar_w - 2) * 5)
-    local col = self:get_level_color(lvl)
-    mon.setTextColor(lvl <= level and col or C.dim)
+    local lvl_col = self:get_level_color(lvl)
+    mon.setTextColor(lvl <= level and lvl_col or C.dim)
     mon.write(lvl <= level and "#" or ".")
   end
   mon.setTextColor(C.dim)
   mon.write("]")
-  for i = 1, 5 do
-    local x = bar_x + math.floor((bar_w - 2) * (i - 1) / 4) + 1
-    mon.setCursorPos(x, bar_y + 1)
-    local col = self:get_level_color(i)
-    mon.setTextColor(i <= level and col or C.dim)
-    mon.write(tostring(i))
-  end
 
-  -- Footer
+  for i = 1, 5 do
+    local x = bx + 3 + (i - 1) * 7
+    local lvl_col = self:get_level_color(i)
+    mon.setCursorPos(x, bar_y + 1)
+    mon.setTextColor(i <= level and C.title or C.dim)
+    mon.setBackgroundColor(i <= level and lvl_col or C.bg)
+    mon.write(" " .. i .. " ")
+  end
+  mon.setBackgroundColor(C.bg)
+
+  local footer = "CERBERUS OPS // " .. os.date("%H:%M:%S")
+  local fx = math.max(1, math.floor((mw - #footer) / 2) + 1)
   for x = 1, mw do
     mon.setCursorPos(x, mh)
     mon.setBackgroundColor(C.panel)
     mon.setTextColor(C.title)
     mon.write(" ")
   end
-  local footer = "CERBERUS OPS"
-  local foot_x = math.max(1, math.floor((mw - #footer) / 2) + 1)
-  mon.setCursorPos(foot_x, mh)
+  mon.setCursorPos(fx, mh)
   mon.write(footer)
 end
 
@@ -284,7 +235,7 @@ function DefconDisplay:run()
   self:init()
   w, h = term.getSize()
 
-  self:draw_banner()
+  self:draw_ascii(self.current_level, self:get_level_color(self.current_level), self:get_level_message(self.current_level))
   self:update_monitor()
 
   local recv_timer = os.startTimer(1)
@@ -293,7 +244,7 @@ function DefconDisplay:run()
     local ev, p1, p2, p3, p4 = os.pullEventRaw()
 
     if ev == "timer" then
-      self:draw_banner()
+      self:draw_ascii(self.current_level, self:get_level_color(self.current_level), self:get_level_message(self.current_level))
       self:update_monitor()
       recv_timer = os.startTimer(1)
 
@@ -302,7 +253,7 @@ function DefconDisplay:run()
       if type(msg) == "table" and msg.type == "DEFCON_UPDATE" then
         self.current_level = msg.level or 5
         self.last_update = msg.timestamp
-        self:draw_banner()
+        self:draw_ascii(self.current_level, self:get_level_color(self.current_level), self:get_level_message(self.current_level))
         self:update_monitor()
       end
 
