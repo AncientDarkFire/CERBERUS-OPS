@@ -4,7 +4,7 @@
 -- ============================================================
 --  SISTEMA GLOBAL
 -- ============================================================
-local VERSION   = "2.2.0"
+local VERSION   = "2.3.0"
 local SYSTEM_ID = os.computerID()
 local BASE_PATH = nil   -- se resuelve en boot
 

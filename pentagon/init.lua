@@ -3,7 +3,7 @@
 
 local Pentagon = {}
 
-local VERSION   = "1.0.0"
+local VERSION   = "2.3.0"
 local SYSTEM_ID = os.computerID()
 local BASE_PATH = nil
 

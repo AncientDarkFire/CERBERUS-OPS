@@ -101,7 +101,7 @@ end
 --  DATOS DEL INSTALADOR
 -- ============================================================
 
-local VERSION  = "1.0.0"
+local VERSION  = "2.3.0"
 local BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main"
 local DISK_NAME = "PENTAGON-SRV"
 
