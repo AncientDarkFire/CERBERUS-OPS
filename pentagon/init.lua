@@ -372,16 +372,27 @@ local function draw_prompt()
   wa(2, h - 1, "PENTAGON> ", C.ok, C.bg)
 end
 
-local function handle_message(msg)
+local function handle_message(msg, reply_channel)
   local msg_type = msg.type
 
   if msg_type == "REGISTER" then
     ClientManager:register_client(msg)
+    out_push("Nuevo cliente: " .. (msg.client_id or msg.from) .. " [" .. (msg.system or "UNKNOWN") .. "]", C.ok)
 
   elseif msg_type == "AUTH_REQUEST" then
     AuthServer:add_request(msg)
+    out_push("Auth request: " .. (msg.system or "UNKNOWN") .. " de ID:" .. (msg.client_id or msg.from), C.warn)
 
   elseif msg_type == "PING" then
+    -- Responder PING con PONG
+    if PENTAGON.modem then
+      local reply_ch = reply_channel or 100
+      PENTAGON.modem.transmit(reply_ch, 100, {
+        type = "PONG",
+        id = "PENTAGON",
+        from = os.computerID(),
+      })
+    end
     ClientManager:update_client(msg.from)
 
   elseif msg_type == "MSG_FORWARD" then
@@ -470,7 +481,7 @@ local function network_listener()
     local ev, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
 
     if type(message) == "table" then
-      handle_message(message)
+      handle_message(message, channel)
     end
   end
 end

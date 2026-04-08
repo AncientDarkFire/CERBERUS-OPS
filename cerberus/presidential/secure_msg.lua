@@ -206,7 +206,13 @@ function SecureMsg:init()
   self.modem = peripheral.find("modem")
   if self.modem then
     self.modem.open(CHANNEL)
-    self.modem.open(100)   -- canal central para PING
+    self.modem.open(100)
+    -- Registrar con el servidor
+    self.modem.transmit(100, 100, {
+      type = "REGISTER",
+      client_id = os.computerID(),
+      system = "MSG",
+    })
   end
   return self
 end

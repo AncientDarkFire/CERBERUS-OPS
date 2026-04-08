@@ -453,7 +453,16 @@ end
 
 function NuclearControl:run()
   self.modem = peripheral.find("modem")
-  if self.modem then self.modem.open(101) end
+  if self.modem then
+    self.modem.open(100)
+    self.modem.open(101)
+    -- Registrar con el servidor
+    self.modem.transmit(100, 100, {
+      type = "REGISTER",
+      client_id = os.computerID(),
+      system = "NUCLEAR",
+    })
+  end
 
   while true do
     self:draw_panel()

@@ -24,10 +24,10 @@ local C = {
 --  SISTEMAS REGISTRADOS
 -- ============================================================
 SentinelHUD.systems = {
-  { id = "NUCLEAR", name = "Control Nuclear",   channel = 101, status = "---", last_seen = nil },
-  { id = "MSG",     name = "Mensajeria Segura",  channel = 102, status = "---", last_seen = nil },
-  { id = "DOCS",    name = "Documentos Clasif.", channel = 103, status = "---", last_seen = nil },
-  { id = "AUTH",    name = "Autenticacion",      channel = 100, status = "---", last_seen = nil },
+  { id = "PENTAGON", name = "Servidor Central",    channel = 100, status = "---", last_seen = nil },
+  { id = "NUCLEAR", name = "Control Nuclear",      channel = 101, status = "---", last_seen = nil },
+  { id = "MSG",     name = "Mensajeria Segura",    channel = 102, status = "---", last_seen = nil },
+  { id = "DOCS",    name = "Documentos Clasif.",   channel = 103, status = "---", last_seen = nil },
 }
 
 -- ============================================================
@@ -39,6 +39,27 @@ SentinelHUD.last_scan  = 0
 SentinelHUD.scan_count = 0
 SentinelHUD.alerts     = {}
 SentinelHUD.MAX_ALERTS = 5
+SentinelHUD.registered = false
+
+-- ============================================================
+--  REGISTRO CON SERVIDOR
+-- ============================================================
+
+function SentinelHUD:register()
+  if not self.modem then return false end
+
+  self.modem.transmit(100, 100, {
+    type = "REGISTER",
+    client_id = os.computerID(),
+    system = "HUD",
+    info = {
+      version = "1.0.0",
+      systems = { "NUCLEAR", "MSG", "DOCS", "HUD" }
+    }
+  })
+  self.registered = true
+  return true
+end
 
 -- ============================================================
 --  UTILIDADES DE DIBUJO
@@ -388,6 +409,8 @@ function SentinelHUD:run()
     self.modem.open(101)
     self.modem.open(102)
     self.modem.open(103)
+    -- Registrar con el servidor
+    self:register()
   else
     self:push_alert("Sin modem - modo lectura local", C.warn)
   end

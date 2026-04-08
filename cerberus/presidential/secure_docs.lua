@@ -648,6 +648,12 @@ function SecureDocs:run()
   if self.modem then
     self.modem.open(CHANNEL)
     self.modem.open(100)
+    -- Registrar con el servidor
+    self.modem.transmit(100, 100, {
+      type = "REGISTER",
+      client_id = os.computerID(),
+      system = "DOCS",
+    })
   end
 
   w, h = term.getSize()
