@@ -1,29 +1,86 @@
--- defcon_display.lua - CERBERUS DEFCON Display
+-- defcon_display.lua - CERBERUS_OPS DEFCON Display v2.2.0
 -- CC:Tweaked 1.20.1 | Compatible Lua 5.2
+-- Muestra el nivel DEFCON actual recibido via modem.
+-- Todo el espacio de pantalla se dedica al numero DEFCON.
 
 local DefconDisplay = {}
 
+-- ============================================================
+--  PALETA BASE
+-- ============================================================
 local C = {
-  bg       = colors.black,
-  panel    = colors.blue,
-  accent   = colors.lightBlue,
-  title    = colors.white,
-  dim      = colors.gray,
-  ok       = colors.lime,
-  warn     = colors.yellow,
-  err      = colors.red,
-  cyan     = colors.cyan,
-  green    = colors.green,
-  lime     = colors.lime,
-  orange   = colors.orange,
+  bg     = colors.black,
+  panel  = colors.blue,
+  accent = colors.lightBlue,
+  title  = colors.white,
+  dim    = colors.gray,
 }
 
-DefconDisplay.modem = nil
-DefconDisplay.current_level = 5
-DefconDisplay.last_update = nil
-DefconDisplay.running = true
+-- ============================================================
+--  NIVELES
+-- ============================================================
+local LEVELS = {
+  [5] = { color = colors.lightBlue, label = "PAZ",           desc = "Situacion de paz"                         },
+  [4] = { color = colors.green,     label = "ELEVADA",        desc = "Incremento en inteligencia y seguridad"   },
+  [3] = { color = colors.yellow,    label = "SUBESTANDAR",    desc = "F. Aerea lista para despliegue en 15 min" },
+  [2] = { color = colors.red,       label = "GRAVE",          desc = "Fuerzas armadas listas para despliegue"   },
+  [1] = { color = colors.white,     label = "GUERRA NUCLEAR", desc = "Guerra Nuclear Inminente"                 },
+}
 
+-- ============================================================
+--  ESTADO
+-- ============================================================
+DefconDisplay.modem         = nil
+DefconDisplay.current_level = 5
+DefconDisplay.last_update   = nil
+DefconDisplay.running       = true
+
+-- ============================================================
+--  NUMEROS EN ASCII GRANDES (5 filas, ancho variable)
+-- ============================================================
+local BIG = {
+  [1] = {
+    "  # ",
+    " ## ",
+    "  # ",
+    "  # ",
+    " ###",
+  },
+  [2] = {
+    " ## ",
+    "#  #",
+    "  # ",
+    " #  ",
+    "####",
+  },
+  [3] = {
+    "### ",
+    "   #",
+    " ## ",
+    "   #",
+    "### ",
+  },
+  [4] = {
+    "#  #",
+    "#  #",
+    "####",
+    "   #",
+    "   #",
+  },
+  [5] = {
+    "####",
+    "#   ",
+    "### ",
+    "   #",
+    "### ",
+  },
+}
+
+-- ============================================================
+--  UTILIDADES
+-- ============================================================
 local w, h
+local tick = 0
 
 local function wa(x, y, text, fg, bg)
   term.setBackgroundColor(bg or C.bg)
@@ -46,214 +103,303 @@ local function hln(y, char, fg, bg, x1, x2)
   wa(x1, y, string.rep(char, x2 - x1 + 1), fg, bg)
 end
 
-function DefconDisplay:init()
-  self.modem = peripheral.find("modem")
-  if self.modem then
-    self.modem.open(100)
-    self.modem.open(101)
-    self.modem.open(102)
-    self.modem.open(103)
+local function fill(x1, y1, x2, y2, fg, bg)
+  for row = y1, y2 do
+    wa(x1, row, string.rep(" ", x2 - x1 + 1), fg, bg)
   end
 end
 
-function DefconDisplay:get_level_color(level)
-  if level == 5 then return colors.green end
-  if level == 4 then return colors.lime end
-  if level == 3 then return colors.yellow end
-  if level == 2 then return colors.orange end
-  if level == 1 then return colors.red end
-  return colors.gray
+local function draw_box(x1, y1, x2, y2, fg, bg)
+  fill(x1, y1, x2, y2, fg, bg)
+  wa(x1, y1, "+", fg, bg)  wa(x2, y1, "+", fg, bg)
+  wa(x1, y2, "+", fg, bg)  wa(x2, y2, "+", fg, bg)
+  for x = x1+1, x2-1 do
+    wa(x, y1, "-", fg, bg)
+    wa(x, y2, "-", fg, bg)
+  end
+  for y = y1+1, y2-1 do
+    wa(x1, y, "|", fg, bg)
+    wa(x2, y, "|", fg, bg)
+  end
 end
 
-function DefconDisplay:get_level_message(level)
-  if level == 5 then return "MINIMA" end
-  if level == 4 then return "ELEVADA" end
-  if level == 3 then return "SUBESTANDAR" end
-  if level == 2 then return "GRAVE" end
-  if level == 1 then return "MAXIMA ALERTA" end
-  return "DESCONOCIDO"
+-- ============================================================
+--  HELPERS DE NIVEL
+-- ============================================================
+
+local function level_color(level)
+  return LEVELS[level] and LEVELS[level].color or C.dim
 end
 
-function DefconDisplay:draw_ascii(level, color, msg)
+local function level_label(level)
+  return LEVELS[level] and LEVELS[level].label or "DESCONOCIDO"
+end
+
+local function level_desc(level)
+  return LEVELS[level] and LEVELS[level].desc or ""
+end
+
+-- ============================================================
+--  DIBUJADO DE NUMERO GRANDE
+-- ============================================================
+
+-- Escala el numero ASCII por un factor (cada char -> factor chars)
+local function draw_big_number(level, col, center_y)
+  local digits = BIG[level]
+  if not digits then return end
+
+  local scale   = 2   -- cada celda se expande a 2 chars de ancho
+  local dw      = #digits[1] * scale
+  local dh      = #digits
+  local start_x = math.floor((w - dw) / 2) + 1
+  local start_y = center_y - math.floor(dh / 2)
+
+  for row = 1, dh do
+    local line = digits[row]
+    for col_i = 1, #line do
+      local ch  = line:sub(col_i, col_i)
+      local px  = start_x + (col_i - 1) * scale
+      local py  = start_y + row - 1
+      for s = 0, scale - 1 do
+        if ch ~= " " then
+          wa(px + s, py, " ", col, col)
+        else
+          wa(px + s, py, " ", C.bg, C.bg)
+        end
+      end
+    end
+  end
+end
+
+-- ============================================================
+--  PULSO DE ALERTA (parpadeo suave para niveles 1-2)
+-- ============================================================
+local function alert_pulse(level)
+  -- Para DEFCON 1: alterna borde blanco / negro cada tick
+  -- Para DEFCON 2: borde rojo fijo
+  if level == 1 then
+    return (tick % 2 == 0) and colors.white or C.dim
+  elseif level == 2 then
+    return colors.red
+  end
+  return nil  -- sin pulso
+end
+
+-- ============================================================
+--  DIBUJO PRINCIPAL
+-- ============================================================
+
+function DefconDisplay:draw()
   w, h = term.getSize()
+  tick = tick + 1
+
+  local level = self.current_level
+  local col   = level_color(level)
+  local lbl   = level_label(level)
+  local desc  = level_desc(level)
+
   term.setBackgroundColor(C.bg)
   term.clear()
 
-  local panel_w = math.min(50, w - 4)
-  local panel_x = math.floor((w - panel_w) / 2)
-  local panel_h = h - 6
-  local panel_y = 4
-
-  hln(1, " ", C.panel, C.accent)
-  wc(1, "  DEFCON // ESTADO DE ALERTA NACIONAL  ", C.panel, C.accent)
+  -- =========================================================
+  --  CABECERA: barra del color del nivel actual
+  -- =========================================================
+  hln(1, " ", C.bg, col)
+  wc(1, "  DEFCON  //  ESTADO DE ALERTA NACIONAL  ", C.bg, col)
   hln(2, "-", C.dim, C.bg)
 
-  wa(2, 3, "CERBERUS OPS // ID:" .. os.computerID(), C.dim, C.bg)
+  -- Subheader: identificacion
+  wa(2,       3, "CERBERUS OPS // DoD // MineField Mods", C.dim, C.bg)
   if self.last_update then
     local ts = self.last_update
     wa(w - #ts - 1, 3, ts, C.dim, C.bg)
   end
 
-  local box_x = panel_x + 1
-  local box_w = panel_w - 2
+  -- =========================================================
+  --  AREA CENTRAL: numero DEFCON grande
+  -- =========================================================
+  -- Calcular zona central disponible (entre linea 4 y h-5)
+  local center_y = math.floor((4 + h - 5) / 2)
 
-  wa(box_x, panel_y, "/========================================\\", color, C.bg)
-  wa(box_x, panel_y + 1, "|", color, C.bg)
-  wa(box_x + box_w - 1, panel_y + 1, "|", color, C.bg)
-  wa(box_x, panel_y + 2, "|  _____ _____ _____ _____ _____  |", color, C.bg)
-  wa(box_x, panel_y + 3, "| |     |   __|     |   __|  _  | |", color, C.bg)
-  wa(box_x, panel_y + 4, "| |   --|   __|   --|   __|     | |", color, C.bg)
-  wa(box_x, panel_y + 5, "| |_____|_____|_____|_____|__|__| |", color, C.bg)
-  wa(box_x, panel_y + 6, "|                                  |", color, C.bg)
-
-  local num_str = tostring(level)
-  local num_x = box_x + 2 + math.floor((box_w - 4 - #num_str) / 2)
-  wa(num_x, panel_y + 6, "[" .. num_str .. "]  " .. msg, C.title, color)
-
-  wa(box_x, panel_y + 7, "|__________________________________|", color, C.bg)
-  wa(box_x, panel_y + 8, "|", color, C.bg)
-  wa(box_x + box_w - 1, panel_y + 8, "|", color, C.bg)
-
-  local status_y = panel_y + 10
-  wa(box_x, status_y, "+--[ ESTADO DE ALERTA ]--+", color, C.bg)
-  wa(box_x, status_y + 1, "|                          |", color, C.bg)
-
-  local bar_y = status_y + 2
-  local bar_w = box_w - 4
-  wa(box_x + 2, bar_y, "[", color, C.bg)
-  wa(box_x + bar_w, bar_y, "]", color, C.bg)
-
-  for i = 1, bar_w - 2 do
-    local lvl = math.ceil(i / (bar_w - 2) * 5)
-    local lvl_col = self:get_level_color(lvl)
-    wa(box_x + 2 + i, bar_y, lvl <= level and "#" or ".", lvl <= level and lvl_col or C.dim, C.bg)
+  -- Borde de alerta pulsante para niveles criticos
+  local pulse_col = alert_pulse(level)
+  if pulse_col then
+    hln(4,     "-", pulse_col, C.bg)
+    hln(h - 4, "-", pulse_col, C.bg)
   end
 
-  wa(box_x, status_y + 3, "|                          |", color, C.bg)
-  wa(box_x, status_y + 4, "|  ", color, C.bg)
-  for i = 1, 5 do
-    local lvl_col = self:get_level_color(i)
-    wa(box_x + 2 + (i - 1) * 7, status_y + 4, " " .. i .. " ", i <= level and C.title or C.dim, i <= level and lvl_col or C.dim)
+  -- Numero gigante centrado
+  draw_big_number(level, col, center_y)
+
+  -- "DEFCON" encima del numero
+  local label_y = center_y - 4
+  if label_y >= 4 then
+    wc(label_y, "D E F C O N", col, C.bg)
   end
-  wa(box_x + box_w - 2, status_y + 4, " |", color, C.bg)
 
-  wa(box_x, status_y + 5, "|                          |", color, C.bg)
-  wa(box_x, status_y + 6, "+--------------------------+/", color, C.bg)
+  -- Numero en texto debajo (redundante pero util en pantallas pequenas)
+  local num_text = "[ " .. level .. " ]"
+  local below_y  = center_y + 4
+  if below_y <= h - 5 then
+    wc(below_y, num_text, col, C.bg)
+  end
 
-  wa(box_x + 1, status_y + 7, "Presione [Q] para salir", C.dim, C.bg)
+  -- =========================================================
+  --  PANEL DE ESTADO INFERIOR
+  -- =========================================================
+  local info_y = h - 4
 
+  -- Separador
+  hln(info_y - 1, "-", C.dim, C.bg)
+
+  -- Label y descripcion
+  wc(info_y,     lbl,  col,  C.bg)
+  wc(info_y + 1, desc, C.dim, C.bg)
+
+  -- =========================================================
+  --  BARRA DE NIVELES (indicador 5..1)
+  -- =========================================================
+  local bar_y   = info_y + 2
+  local bar_w   = math.min(40, w - 4)
+  local bar_x   = math.floor((w - bar_w) / 2) + 1
+  local seg_w   = math.floor(bar_w / 5)
+
+  for i = 5, 1, -1 do
+    local sx    = bar_x + (5 - i) * seg_w
+    local s_col = level_color(i)
+    local active = (i >= level)
+    -- Bloque de segmento
+    for s = 0, seg_w - 2 do
+      wa(sx + s, bar_y, " ", s_col, active and s_col or C.dim)
+    end
+    -- Numero del nivel centrado en el segmento
+    local nx = sx + math.floor((seg_w - 1) / 2)
+    wa(nx, bar_y, tostring(i), active and C.bg or C.dim, active and s_col or C.dim)
+  end
+
+  -- =========================================================
+  --  FOOTER
+  -- =========================================================
   hln(h, " ", C.title, C.panel)
-  wa(2, h, "CERBERUS OPS // DoD // MineField Mods", C.title, C.panel)
-  wa(w - 12, h, "DEFCON:" .. level, color, C.panel)
+  wa(2,          h, "CERBERUS OPS // DoD // MineField Mods", C.title, C.panel)
+  local fl = "DEFCON:" .. level
+  wa(w - #fl - 1, h, fl, col, C.panel)
 end
 
+-- ============================================================
+--  MONITOR EXTERNO
+-- Muestra exclusivamente el nivel DEFCON de forma maximalista
+-- ============================================================
+
 function DefconDisplay:update_monitor()
-  local mon = _G.CERBERUS and _G.CERBERUS.monitor
+  local mon = (_G.CERBERUS  and _G.CERBERUS.monitor)
+           or (_G.PENTAGON  and _G.PENTAGON.monitor)
   if not mon then return end
 
   local mw, mh = mon.getSize()
-  local level = self.current_level
-  local color = self:get_level_color(level)
-  local msg = self:get_level_message(level)
+  local level  = self.current_level
+  local col    = level_color(level)
+  local lbl    = level_label(level)
 
   mon.setBackgroundColor(C.bg)
   mon.clear()
 
-  local bw = math.min(50, mw - 4)
-  local bx = math.floor((mw - bw) / 2) + 1
-
+  -- Cabecera del color del nivel
   for x = 1, mw do
-    mon.setBackgroundColor(C.panel)
-    mon.setTextColor(C.accent)
+    mon.setBackgroundColor(col)
+    mon.setTextColor(C.bg)
     mon.setCursorPos(x, 1)
-    mon.write("=")
-    mon.setCursorPos(x, mh)
-    mon.write("=")
+    mon.write(" ")
+  end
+  local htxt = "DEFCON"
+  local hx   = math.max(1, math.floor((mw - #htxt) / 2) + 1)
+  mon.setCursorPos(hx, 1)
+  mon.write(htxt)
+
+  -- Numero enorme: usa BIG escalado x2
+  local digits  = BIG[level]
+  if digits then
+    local scale   = 2
+    local dw      = #digits[1] * scale
+    local dh      = #digits
+    local start_x = math.max(1, math.floor((mw - dw) / 2) + 1)
+    local start_y = math.max(2, math.floor((mh - dh) / 2))
+
+    for row = 1, dh do
+      local line = digits[row]
+      for ci = 1, #line do
+        local ch = line:sub(ci, ci)
+        local px = start_x + (ci - 1) * scale
+        local py = start_y + row - 1
+        for s = 0, scale - 1 do
+          mon.setCursorPos(px + s, py)
+          if ch ~= " " then
+            mon.setBackgroundColor(col)
+            mon.setTextColor(C.bg)
+            mon.write(" ")
+          else
+            mon.setBackgroundColor(C.bg)
+            mon.write(" ")
+          end
+        end
+      end
+    end
   end
 
-  mon.setTextColor(color)
-  mon.setCursorPos(bx, 2)
-  mon.write("/========================================\\")
-  mon.setCursorPos(bx, 3)
-  mon.write("|  _____ _____ _____ _____ _____        |")
-  mon.setCursorPos(bx, 4)
-  mon.write("| |     |   __|     |   __|  _  |       |")
-  mon.setCursorPos(bx, 5)
-  mon.write("| |   --|   __|   --|   __|     |       |")
-  mon.setCursorPos(bx, 6)
-  mon.write("| |_____|_____|_____|_____|__|__|       |")
-  mon.setCursorPos(bx, 7)
-  mon.write("|======================================|")
-
-  local num_str = "  [ " .. level .. " ]  " .. msg
-  local nx = math.max(1, math.floor((mw - #num_str) / 2) + 1)
-  mon.setTextColor(C.title)
-  mon.setCursorPos(nx, 8)
-  mon.write(num_str)
-
-  mon.setTextColor(color)
-  mon.setCursorPos(bx, 9)
-  mon.write("\\========================================/")
-
-  local bar_y = 11
-  local bar_w = bw - 6
-  mon.setCursorPos(bx + 2, bar_y)
-  mon.setTextColor(C.dim)
-  mon.write("[")
-  for i = 1, bar_w - 2 do
-    local lvl = math.ceil(i / (bar_w - 2) * 5)
-    local lvl_col = self:get_level_color(lvl)
-    mon.setTextColor(lvl <= level and lvl_col or C.dim)
-    mon.write(lvl <= level and "#" or ".")
-  end
-  mon.setTextColor(C.dim)
-  mon.write("]")
-
-  for i = 1, 5 do
-    local x = bx + 3 + (i - 1) * 7
-    local lvl_col = self:get_level_color(i)
-    mon.setCursorPos(x, bar_y + 1)
-    mon.setTextColor(i <= level and C.title or C.dim)
-    mon.setBackgroundColor(i <= level and lvl_col or C.bg)
-    mon.write(" " .. i .. " ")
-  end
+  -- Label centrado debajo del numero
+  local lbl_y = math.min(mh - 1, math.floor(mh * 0.75))
+  local lx    = math.max(1, math.floor((mw - #lbl) / 2) + 1)
+  mon.setCursorPos(lx, lbl_y)
   mon.setBackgroundColor(C.bg)
+  mon.setTextColor(col)
+  mon.write(lbl)
 
-  local footer = "CERBERUS OPS // " .. os.date("%H:%M:%S")
-  local fx = math.max(1, math.floor((mw - #footer) / 2) + 1)
+  -- Footer
   for x = 1, mw do
     mon.setCursorPos(x, mh)
     mon.setBackgroundColor(C.panel)
     mon.setTextColor(C.title)
     mon.write(" ")
   end
+  local footer = os.date("%H:%M:%S")
+  local fx = math.max(1, math.floor((mw - #footer) / 2) + 1)
   mon.setCursorPos(fx, mh)
   mon.write(footer)
 end
 
-function DefconDisplay:run()
-  self:init()
-  w, h = term.getSize()
+-- ============================================================
+--  BUCLE PRINCIPAL
+-- ============================================================
 
-  self:draw_ascii(self.current_level, self:get_level_color(self.current_level), self:get_level_message(self.current_level))
+function DefconDisplay:run()
+  self.modem = peripheral.find("modem")
+  if self.modem then
+    for _, ch in ipairs({100, 101, 102, 103}) do
+      self.modem.open(ch)
+    end
+  end
+
+  w, h = term.getSize()
+  self:draw()
   self:update_monitor()
 
-  local recv_timer = os.startTimer(1)
+  local anim_timer = os.startTimer(0.5)
 
   while self.running do
     local ev, p1, p2, p3, p4 = os.pullEventRaw()
 
     if ev == "timer" then
-      self:draw_ascii(self.current_level, self:get_level_color(self.current_level), self:get_level_message(self.current_level))
+      -- Redibujar para pulso animado y reloj
+      self:draw()
       self:update_monitor()
-      recv_timer = os.startTimer(1)
+      anim_timer = os.startTimer(0.5)
 
     elseif ev == "modem_message" then
       local msg = p4
       if type(msg) == "table" and msg.type == "DEFCON_UPDATE" then
-        self.current_level = msg.level or 5
-        self.last_update = msg.timestamp
-        self:draw_ascii(self.current_level, self:get_level_color(self.current_level), self:get_level_message(self.current_level))
+        self.current_level = math.max(1, math.min(5, tonumber(msg.level) or 5))
+        self.last_update   = msg.timestamp
+        self:draw()
         self:update_monitor()
       end
 
@@ -261,6 +407,7 @@ function DefconDisplay:run()
       if p1 == keys.q then
         self.running = false
       end
+
     elseif ev == "terminate" then
       self.running = false
     end
