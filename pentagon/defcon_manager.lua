@@ -1,4 +1,4 @@
--- defcon_manager.lua - CERBERUS_OPS DEFCON Control Panel v2.2.0
+-- defcon_manager.lua - CERBERUS_OPS DEFCON Control Panel v2.4.0
 -- CC:Tweaked 1.20.1 | Compatible Lua 5.2
 
 local DefconManager = {}
@@ -21,11 +21,11 @@ local C = {
 --  NIVELES DEFCON
 -- ============================================================
 local LEVELS = {
-  [5] = { color = colors.lightBlue, label = "PAZ",          desc = "Situacion de paz"                          },
-  [4] = { color = colors.green,     label = "ELEVADA",       desc = "Incremento en inteligencia y seguridad"    },
-  [3] = { color = colors.yellow,    label = "SUBESTANDAR",   desc = "F. Aerea lista para despliegue en 15 min"  },
-  [2] = { color = colors.red,       label = "GRAVE",         desc = "Fuerzas armadas listas para despliegue"    },
-  [1] = { color = colors.white,     label = "GUERRA NUCLEAR",desc = "Guerra Nuclear Inminente"                  },
+  [5] = { color = colors.lightBlue, label = "PAZ",            desc = "Situacion de paz"                            },
+  [4] = { color = colors.green,     label = "ELEVADA",        desc = "Incremento en inteligencia y seguridad"      },
+  [3] = { color = colors.yellow,    label = "SUBESTANDAR",    desc = "F. Aerea lista para despliegue en 15 min"    },
+  [2] = { color = colors.red,       label = "GRAVE",          desc = "Fuerzas armadas listas para despliegue"      },
+  [1] = { color = colors.white,     label = "GUERRA NUCLEAR", desc = "Guerra Nuclear Inminente"                    },
 }
 
 -- ============================================================
@@ -36,6 +36,8 @@ DefconManager.current_level  = 5
 DefconManager.last_update    = nil
 DefconManager.api_url        = "http://api.minefieldmods.com:25726/api/defcon"
 DefconManager.running        = false
+DefconManager.poll_interval  = 30
+DefconManager.background_running = false
 
 -- ============================================================
 --  INICIALIZACION
@@ -43,6 +45,101 @@ DefconManager.running        = false
 
 function DefconManager:init(modem)
   self.modem = modem
+end
+
+-- ============================================================
+--  HELPERS
+-- ============================================================
+
+function DefconManager:level_color(level)
+  return LEVELS[level] and LEVELS[level].color or C.dim
+end
+
+function DefconManager:level_label(level)
+  return LEVELS[level] and LEVELS[level].label or "DESCONOCIDO"
+end
+
+function DefconManager:level_desc(level)
+  return LEVELS[level] and LEVELS[level].desc or ""
+end
+
+-- ============================================================
+--  RED / API
+-- ============================================================
+
+function DefconManager:broadcast()
+  if not self.modem then return end
+  for _, ch in ipairs({100, 101, 102, 103}) do
+    self.modem.transmit(ch, 100, {
+      type      = "DEFCON_UPDATE",
+      level     = self.current_level,
+      timestamp = os.date("!%Y-%m-%dT%H:%M:%S"),
+    })
+  end
+end
+
+function DefconManager:fetch_from_api()
+  local ok, result = pcall(function()
+    local response = http.get(self.api_url, nil, true)
+    if response then
+      local data = response.readAll()
+      response.close()
+      return textutils.unserialize(data)
+    end
+    return nil
+  end)
+
+  if ok and result and result.defcon then
+    local new_level = math.max(1, math.min(5, math.floor(result.defcon)))
+    if new_level ~= self.current_level then
+      self.current_level = new_level
+      self.last_update = result.timestamp or os.date("!%Y-%m-%dT%H:%M:%S")
+      self:broadcast()
+      return true
+    end
+  end
+  return false
+end
+
+function DefconManager:post_to_api(level)
+  pcall(function()
+    http.post(self.api_url, textutils.serialize({defcon = level}), true)
+  end)
+end
+
+function DefconManager:set_defcon(level)
+  level = math.max(1, math.min(5, math.floor(level)))
+  self.current_level = level
+  self.last_update   = os.date("!%Y-%m-%dT%H:%M:%S")
+  self:broadcast()
+  self:post_to_api(level)
+  return true
+end
+
+-- ============================================================
+--  HILO DE FONDO - POLLING API
+-- ============================================================
+
+function DefconManager:background_poll()
+  self.background_running = true
+  while self.background_running do
+    self:fetch_from_api()
+    os.startTimer(self.poll_interval)
+    local ev = os.pullEvent("timer")
+  end
+end
+
+function DefconManager:start_background()
+  if not self.background_running then
+    local co = coroutine.create(function()
+      self:background_poll()
+    end)
+    coroutine.resume(co)
+  end
+end
+
+function DefconManager:stop_background()
+  self.background_running = false
 end
 
 -- ============================================================
@@ -92,52 +189,6 @@ local function draw_box(x1, y1, x2, y2, fg, bg)
 end
 
 -- ============================================================
---  HELPERS
--- ============================================================
-
-function DefconManager:level_color(level)
-  return LEVELS[level] and LEVELS[level].color or C.dim
-end
-
-function DefconManager:level_label(level)
-  return LEVELS[level] and LEVELS[level].label or "DESCONOCIDO"
-end
-
-function DefconManager:level_desc(level)
-  return LEVELS[level] and LEVELS[level].desc or ""
-end
-
--- ============================================================
---  RED / API
--- ============================================================
-
-function DefconManager:broadcast()
-  if not self.modem then return end
-  for _, ch in ipairs({100, 101, 102, 103}) do
-    self.modem.transmit(ch, 100, {
-      type      = "DEFCON_UPDATE",
-      level     = self.current_level,
-      timestamp = os.date("!%Y-%m-%dT%H:%M:%S"),
-    })
-  end
-end
-
-function DefconManager:post_to_api(level)
-  pcall(function()
-    http.post(self.api_url, textutils.serialize({defcon = level}), true)
-  end)
-end
-
-function DefconManager:set_defcon(level)
-  level = math.max(1, math.min(5, math.floor(level)))
-  self.current_level = level
-  self.last_update   = os.date("!%Y-%m-%dT%H:%M:%S")
-  self:broadcast()
-  self:post_to_api(level)
-  return true
-end
-
--- ============================================================
 --  DIBUJO DEL PANEL
 -- ============================================================
 
@@ -148,37 +199,29 @@ function DefconManager:draw_panel(selected)
 
   local cur_col = self:level_color(self.current_level)
 
-  -- Cabecera con color del nivel activo
   hln(1, " ", C.bg, cur_col)
   wc(1, "  DEFCON  //  SISTEMA DE ALERTA NACIONAL  ", C.bg, cur_col)
   hln(2, "-", C.dim, C.bg)
 
-  -- Info fila 3
   wa(2,      3, "PENTAGON // DoD // MineField Mods", C.dim, C.bg)
   local cur_str = "DEFCON " .. self.current_level .. " - " .. self:level_label(self.current_level)
   wa(w - #cur_str - 1, 3, cur_str, cur_col, C.bg)
 
-  -- ---- Panel de estado actual ----
   local sp_w = math.min(52, w - 2)
   local sp_x = math.floor((w - sp_w) / 2) + 1
   draw_box(sp_x, 5, sp_x + sp_w - 1, 9, cur_col, C.bg)
   wa(sp_x + 2, 5, "[ ESTADO ACTUAL ]", cur_col, C.bg)
 
-  -- Nivel grande centrado
   local big = "DEFCON  " .. self.current_level
   wc(6, big, cur_col, C.bg)
-  -- Label
   wc(7, self:level_label(self.current_level), cur_col, C.bg)
-  -- Descripcion
   local desc = self:level_desc(self.current_level)
   if #desc > sp_w - 4 then desc = desc:sub(1, sp_w - 5) .. "." end
   wc(8, desc, C.dim, C.bg)
 
-  -- ---- Botones de seleccion ----
   local btn_section_y = 11
   wc(btn_section_y, "SELECCIONE EL NUEVO NIVEL:", C.dim, C.bg)
 
-  -- 5 botones centrados
   local btn_w   = 10
   local btn_gap = 1
   local total_w = 5 * btn_w + 4 * btn_gap
@@ -191,36 +234,26 @@ function DefconManager:draw_panel(selected)
     local is_sel = (selected == i)
     local is_cur = (self.current_level == i)
 
-    -- Fondo: relleno si seleccionado, borde si no
     local box_fg = col
     local box_bg = is_sel and col or C.bg
 
     draw_box(bx, btn_y, bx + btn_w - 1, btn_y + 4, box_fg, box_bg)
 
-    -- Numero grande
     local num_fg = is_sel and C.bg or col
-    wc_local = function(y, text, fg, bg)
-      local lx = math.max(bx + 1, math.floor((bx + bx + btn_w - 2 - #text) / 2) + 1)
-      wa(lx, y, text, fg, bg)
-    end
-
     local n_x = bx + math.floor((btn_w - 1) / 2)
     wa(n_x, btn_y + 1, tostring(i), num_fg, box_bg)
 
-    -- Label corto
     local lbl = self:level_label(i)
     if #lbl > btn_w - 2 then lbl = lbl:sub(1, btn_w - 3) .. "." end
     local lx = bx + 1 + math.floor((btn_w - 2 - #lbl) / 2)
     wa(lx, btn_y + 2, lbl, num_fg, box_bg)
 
-    -- Indicador de nivel actual
     if is_cur then
       local cur_x = bx + 1 + math.floor((btn_w - 3) / 2)
       wa(cur_x, btn_y + 3, "NOW", num_fg, box_bg)
     end
   end
 
-  -- Descripcion del nivel seleccionado
   local sel_y = btn_y + 6
   local sel_desc = self:level_desc(selected)
   local sel_col  = self:level_color(selected)
@@ -235,7 +268,6 @@ function DefconManager:draw_panel(selected)
   wc(sel_y + 1, d, sel_col, C.bg)
   wc(sel_y + 2, "[<][>] Navegar   [ENTER] Confirmar   [Q] Salir", C.dim, C.bg)
 
-  -- Footer
   hln(h, " ", C.title, C.panel)
   wa(2,          h, "PENTAGON // DoD // MineField Mods", C.title, C.panel)
   local fl = "DEFCON:" .. self.current_level
@@ -247,8 +279,7 @@ end
 -- ============================================================
 
 function DefconManager:update_monitor()
-  local mon = (_G.PENTAGON and _G.PENTAGON.monitor)
-              or (_G.CERBERUS and _G.CERBERUS.monitor)
+  local mon = _G.PENTAGON and _G.PENTAGON.monitor
   if not mon then return end
 
   local mw, mh = mon.getSize()
@@ -260,42 +291,52 @@ function DefconManager:update_monitor()
   mon.setBackgroundColor(C.bg)
   mon.clear()
 
-  -- Cabecera
   for x = 1, mw do
     mon.setBackgroundColor(col)
     mon.setTextColor(C.bg)
     mon.setCursorPos(x, 1)
-    mon.write(" ")
+    mon.write("=")
+    mon.setCursorPos(x, mh)
+    mon.write("=")
   end
-  local title = "  DEFCON " .. level .. "  "
-  local tx = math.max(1, math.floor((mw - #title) / 2) + 1)
-  mon.setCursorPos(tx, 1)
-  mon.setBackgroundColor(col)
-  mon.setTextColor(C.bg)
-  mon.write(title)
+  for y = 1, mh do
+    mon.setCursorPos(1, y)
+    mon.write("|")
+    mon.setCursorPos(mw, y)
+    mon.write("|")
+  end
+  mon.setCursorPos(1, 1)
+  mon.write("+")
+  mon.setCursorPos(mw, 1)
+  mon.write("+")
+  mon.setCursorPos(1, mh)
+  mon.write("+")
+  mon.setCursorPos(mw, mh)
+  mon.write("+")
 
-  -- Nivel grande
-  local big = "[ " .. level .. " ]"
-  local bx  = math.max(1, math.floor((mw - #big) / 2) + 1)
-  mon.setCursorPos(bx, 3)
+  local title = "  DEFCON  "
+  local tx = math.max(1, math.floor((mw - #title) / 2) + 1)
+  mon.setCursorPos(tx, 2)
   mon.setBackgroundColor(C.bg)
   mon.setTextColor(col)
-  mon.write(big)
+  mon.write(title)
 
-  -- Label
-  local lx = math.max(1, math.floor((mw - #lbl) / 2) + 1)
-  mon.setCursorPos(lx, 4)
+  local big_lbl = "  [ " .. level .. " ]  "
+  local bx = math.max(1, math.floor((mw - #big_lbl) / 2) + 1)
+  mon.setCursorPos(bx, math.floor(mh / 2) - 1)
   mon.setTextColor(col)
+  mon.write(big_lbl)
+
+  local lx = math.max(1, math.floor((mw - #lbl) / 2) + 1)
+  mon.setCursorPos(lx, math.floor(mh / 2))
   mon.write(lbl)
 
-  -- Descripcion (wrap simple)
   local dx = math.max(1, math.floor((mw - #desc) / 2) + 1)
-  mon.setCursorPos(dx, 5)
+  mon.setCursorPos(dx, math.floor(mh / 2) + 1)
   mon.setTextColor(C.dim)
   mon.write(desc:sub(1, mw - 2))
 
-  -- Barra de niveles
-  local bar_y = 7
+  local bar_y = mh - 4
   local bar_w = math.min(mw - 4, 40)
   local bar_x = math.floor((mw - bar_w) / 2) + 1
   local seg   = math.floor(bar_w / 5)
@@ -312,7 +353,6 @@ function DefconManager:update_monitor()
     mon.setBackgroundColor(C.bg)
   end
 
-  -- Indicadores numericos
   for i = 1, 5 do
     local ix = bar_x + (i - 1) * seg + math.floor((seg - 1) / 2)
     local ic = self:level_color(i)
@@ -322,7 +362,6 @@ function DefconManager:update_monitor()
     mon.write(tostring(i))
   end
 
-  -- Footer
   for x = 1, mw do
     mon.setBackgroundColor(C.panel)
     mon.setTextColor(C.title)
@@ -332,8 +371,6 @@ function DefconManager:update_monitor()
   local footer = "PENTAGON // " .. os.date("%H:%M:%S")
   local fx = math.max(1, math.floor((mw - #footer) / 2) + 1)
   mon.setCursorPos(fx, mh)
-  mon.setBackgroundColor(C.panel)
-  mon.setTextColor(C.title)
   mon.write(footer)
 end
 
@@ -401,6 +438,7 @@ function DefconManager:run()
   self.running = true
   local selected = self.current_level
 
+  self:fetch_from_api()
   self:draw_panel(selected)
   self:update_monitor()
 

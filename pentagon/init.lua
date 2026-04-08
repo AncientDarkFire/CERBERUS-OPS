@@ -507,8 +507,19 @@ local function network_listener()
   end
 end
 
+local function defcon_background()
+  while true do
+    local ok = pcall(function()
+      DefconManager:fetch_from_api()
+    end)
+    os.startTimer(DefconManager.poll_interval or 30)
+    os.pullEvent("timer")
+  end
+end
+
 boot_sequence()
 parallel.waitForAll(
   main_menu,
-  network_listener
+  network_listener,
+  defcon_background
 )
