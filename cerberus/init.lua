@@ -421,8 +421,13 @@ local function run_system(key)
 
   local ok, err = pcall(function()
     local module = dofile(path .. ".lua")
-    if module and type(module.run) == "function" then
-      module:run()
+    if module then
+      if module.set_base_path then
+        module:set_base_path(BASE_PATH or "/cerberus")
+      end
+      if type(module.run) == "function" then
+        module:run()
+      end
     end
   end)
 

@@ -113,6 +113,79 @@ local PULSE = { "*", "+", "o", "+" }
 local function pulse() return PULSE[(tick % #PULSE) + 1] end
 
 -- ============================================================
+--  MONITOR EXTERNO
+-- ============================================================
+
+function SentinelHUD:update_monitor()
+  local mon = _G.CERBERUS and _G.CERBERUS.monitor
+  if not mon then return end
+
+  local mw, mh = mon.getSize()
+  mon.setBackgroundColor(C.bg)
+  mon.clear()
+
+  local function mw_at(x, y, text, fg, bg)
+    mon.setBackgroundColor(bg or C.bg)
+    mon.setTextColor(fg or C.title)
+    mon.setCursorPos(x, y)
+    mon.write(text)
+  end
+
+  local function mw_centered(y, text, fg, bg)
+    local mx = math.max(1, math.floor((mw - #text) / 2) + 1)
+    mw_at(mx, y, text, fg, bg)
+  end
+
+  -- Header
+  for x = 1, mw do mw_at(x, 1, " ", C.panel, C.accent) end
+  mw_centered(1, " SENTINEL HUD ", C.panel, C.accent)
+  for x = 1, mw do mw_at(x, 2, "-", C.dim, C.bg) end
+
+  -- Status line
+  local on, off, unk = sys_counts(self.systems)
+  local state_ok = (off == 0 and unk == 0)
+  local state_col = state_ok and C.ok or (off > 0 and C.err or C.warn)
+  local state_label = state_ok and "NOMINAL" or (off > 0 and "ALERTA" or "ESCANEO")
+
+  mw_at(2, 3, "ID:" .. os.computerID(), C.dim, C.bg)
+  local status_txt = state_label .. " [" .. on .. "/" .. #self.systems .. "]"
+  mw_at(mw - #status_txt - 1, 3, status_txt, state_col, C.bg)
+
+  for x = 1, mw do mw_at(x, 4, "-", C.dim, C.bg) end
+
+  -- Systems
+  local y = 6
+  mw_at(2, y, "SISTEMAS:", C.accent, C.bg)
+  y = y + 2
+
+  for _, sys in ipairs(self.systems) do
+    local s_color = sys.status == "ONLINE" and C.ok or (sys.status == "OFFLINE" and C.err or C.dim)
+    local s_label = sys.status == "ONLINE" and "[OK] " or (sys.status == "OFFLINE" and "[--] " or "[??] ")
+    mw_at(2, y, s_label .. sys.id .. " - " .. sys.name, s_color, C.bg)
+    y = y + 1
+  end
+
+  -- Alerts
+  if #self.alerts > 0 then
+    y = y + 1
+    mw_at(2, y, "ALERTAS:", C.err, C.bg)
+    y = y + 1
+    for i = math.max(1, #self.alerts - 3), #self.alerts do
+      local alert = self.alerts[i]
+      if alert then
+        local text = alert.text:sub(1, mw - 4)
+        mw_at(2, y, text, alert.color, C.bg)
+        y = y + 1
+      end
+    end
+  end
+
+  -- Footer
+  for x = 1, mw do mw_at(x, mh, " ", C.title, C.panel) end
+  mw_centered(mh, " CERBERUS OPS v" .. (_G.CERBERUS and _G.CERBERUS.version or "?"), C.panel, C.panel)
+end
+
+-- ============================================================
 --  ALERTAS
 -- ============================================================
 
@@ -419,6 +492,7 @@ function SentinelHUD:run()
 
   self:scan_all()
   self:draw()
+  self:update_monitor()
 
   local auto_timer = os.startTimer(15)
   local anim_timer = os.startTimer(0.4)
@@ -430,12 +504,14 @@ function SentinelHUD:run()
     if ev == "timer" then
       if p1 == anim_timer then
         self:draw()
+        self:update_monitor()
         anim_timer = os.startTimer(0.4)
 
       elseif p1 == auto_timer then
         self:push_alert("Auto-scan iniciado...", C.dim)
         self:scan_all()
         self:draw()
+        self:update_monitor()
         auto_timer = os.startTimer(15)
       end
 

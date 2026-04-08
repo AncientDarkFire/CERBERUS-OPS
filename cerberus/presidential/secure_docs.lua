@@ -32,17 +32,40 @@ local SEC_LEVELS = {
 --  CONSTANTES
 -- ============================================================
 local CHANNEL    = 103
-local DATA_DIR   = "/cerberus/docs"
-local INDEX_FILE = DATA_DIR .. "/index.dat"
-local KEYS_FILE  = DATA_DIR .. "/keys.dat"  -- almacen separado de claves
 local MY_ID      = os.computerID()
+local BASE_PATH  = "/cerberus"
+local DATA_DIR   = nil
+local INDEX_FILE = nil
+local KEYS_FILE  = nil
+
+local function get_data_dir()
+  if not DATA_DIR then
+    local base = _G.CERBERUS and _G.CERBERUS.basePath or BASE_PATH
+    DATA_DIR = base .. "/docs"
+    INDEX_FILE = DATA_DIR .. "/index.dat"
+    KEYS_FILE = DATA_DIR .. "/keys.dat"
+  end
+  return DATA_DIR, INDEX_FILE, KEYS_FILE
+end
 
 -- ============================================================
 --  ESTADO
 -- ============================================================
 SecureDocs.modem       = nil
 SecureDocs.documents   = {}
-SecureDocs.doc_keys    = {}   -- FIX: claves en fichero separado, no derivadas del ID
+SecureDocs.doc_keys    = {}
+SecureDocs.base_path   = BASE_PATH
+
+function SecureDocs:set_base_path(path)
+  self.base_path = path
+  DATA_DIR = nil
+  INDEX_FILE = nil
+  KEYS_FILE = nil
+end
+
+function SecureDocs:get_paths()
+  return get_data_dir()
+end
 SecureDocs.current_user = nil
 SecureDocs.running     = true
 
@@ -212,8 +235,9 @@ end
 -- ============================================================
 
 function SecureDocs:load_index()
-  if fs.exists(INDEX_FILE) then
-    local f = fs.open(INDEX_FILE, "r")
+  local data_dir, index_file = get_data_dir()
+  if fs.exists(index_file) then
+    local f = fs.open(index_file, "r")
     local data = f.readAll()
     f.close()
     self.documents = textutils.unserialize(data) or {}
@@ -223,16 +247,21 @@ function SecureDocs:load_index()
 end
 
 function SecureDocs:save_index()
-  fs.makeDir(DATA_DIR)
-  local f = fs.open(INDEX_FILE, "w")
-  f.write(textutils.serialize(self.documents))
-  f.close()
+  local data_dir, index_file = get_data_dir()
+  fs.makeDir(data_dir)
+  local f = fs.open(index_file, "w")
+  if f then
+    f.write(textutils.serialize(self.documents))
+    f.close()
+    return true
+  end
+  return false
 end
 
 function SecureDocs:load_keys()
-  -- FIX: claves en fichero separado del indice
-  if fs.exists(KEYS_FILE) then
-    local f = fs.open(KEYS_FILE, "r")
+  local _, _, keys_file = get_data_dir()
+  if fs.exists(keys_file) then
+    local f = fs.open(keys_file, "r")
     local data = f.readAll()
     f.close()
     self.doc_keys = textutils.unserialize(data) or {}
@@ -242,14 +271,20 @@ function SecureDocs:load_keys()
 end
 
 function SecureDocs:save_keys()
-  fs.makeDir(DATA_DIR)
-  local f = fs.open(KEYS_FILE, "w")
-  f.write(textutils.serialize(self.doc_keys))
-  f.close()
+  local data_dir, _, keys_file = get_data_dir()
+  fs.makeDir(data_dir)
+  local f = fs.open(keys_file, "w")
+  if f then
+    f.write(textutils.serialize(self.doc_keys))
+    f.close()
+    return true
+  end
+  return false
 end
 
 function SecureDocs:init()
-  fs.makeDir(DATA_DIR)
+  local data_dir = get_data_dir()
+  fs.makeDir(data_dir)
   self:load_index()
   self:load_keys()
   return self
@@ -263,7 +298,6 @@ function SecureDocs:create_document(title, content, sec_level)
   sec_level = math.max(1, math.min(4, sec_level or 1))
 
   local doc_id  = tostring(os.time()) .. "_" .. math.random(10000, 99999)
-  -- FIX: clave aleatoria de 32 chars, independiente del docId
   local enc_key = generate_key(32)
 
   local doc = {
@@ -277,12 +311,16 @@ function SecureDocs:create_document(title, content, sec_level)
     size         = #content,
   }
 
-  local encrypted = xor_crypt(content, enc_key)
-  local file_path = DATA_DIR .. "/" .. doc_id .. ".dat"
+  local data_dir = get_data_dir()
+  local file_path = data_dir .. "/" .. doc_id .. ".dat"
   local f = fs.open(file_path, "w")
-  f.write(encrypted)
-  f.close()
+  if f then
+    f.write(encrypted)
+    f.close()
+  end
 
+  local encrypted = xor_crypt(content, enc_key)
+  
   self.documents[doc_id] = doc
   self.doc_keys[doc_id]  = enc_key
   self:save_index()
@@ -303,7 +341,8 @@ function SecureDocs:read_document(doc_id)
   local enc_key = self.doc_keys[doc_id]
   if not enc_key then return nil, "Clave de cifrado no encontrada" end
 
-  local file_path = DATA_DIR .. "/" .. doc_id .. ".dat"
+  local data_dir = get_data_dir()
+  local file_path = data_dir .. "/" .. doc_id .. ".dat"
   if not fs.exists(file_path) then return nil, "Archivo de datos no encontrado" end
 
   local f = fs.open(file_path, "r")
@@ -323,7 +362,8 @@ function SecureDocs:delete_document(doc_id)
     return false, "Permiso denegado"
   end
 
-  local file_path = DATA_DIR .. "/" .. doc_id .. ".dat"
+  local data_dir = get_data_dir()
+  local file_path = data_dir .. "/" .. doc_id .. ".dat"
   if fs.exists(file_path) then fs.delete(file_path) end
   self.documents[doc_id] = nil
   self.doc_keys[doc_id]  = nil

@@ -1,4 +1,4 @@
--- install_server.lua - PENTAGON Server Installer v1.0.0
+-- install_server.lua - PENTAGON Server Installer
 -- CC:Tweaked 1.20.1 | Compatible Lua 5.2
 
 -- ============================================================

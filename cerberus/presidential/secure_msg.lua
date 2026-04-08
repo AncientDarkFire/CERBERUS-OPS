@@ -23,9 +23,19 @@ local C = {
 --  CONSTANTES
 -- ============================================================
 local CHANNEL     = 102
-local MAX_INBOX   = 20      -- mensajes maximos en bandeja
-local MSG_PREVIEW = 35      -- chars de preview en lista
+local MAX_INBOX   = 20
+local MSG_PREVIEW = 35
 local MY_ID       = os.computerID()
+local BASE_PATH   = "/cerberus"
+local INBOX_FILE  = nil
+
+local function get_inbox_file()
+  if not INBOX_FILE then
+    local base = _G.CERBERUS and _G.CERBERUS.basePath or BASE_PATH
+    INBOX_FILE = base .. "/msg_inbox.dat"
+  end
+  return INBOX_FILE
+end
 
 -- ============================================================
 --  ESTADO
@@ -33,6 +43,12 @@ local MY_ID       = os.computerID()
 SecureMsg.modem   = nil
 SecureMsg.inbox   = {}
 SecureMsg.running = true
+SecureMsg.base_path = BASE_PATH
+
+function SecureMsg:set_base_path(path)
+  self.base_path = path
+  INBOX_FILE = nil
+end
 
 -- ============================================================
 --  UTILIDADES DE DIBUJO  (mismo patron que nuclear/sentinel)
@@ -207,14 +223,35 @@ function SecureMsg:init()
   if self.modem then
     self.modem.open(CHANNEL)
     self.modem.open(100)
-    -- Registrar con el servidor
     self.modem.transmit(100, 100, {
       type = "REGISTER",
       client_id = os.computerID(),
       system = "MSG",
     })
   end
+  self:load_inbox()
   return self
+end
+
+function SecureMsg:load_inbox()
+  local inbox_file = get_inbox_file()
+  if fs.exists(inbox_file) then
+    local f = fs.open(inbox_file, "r")
+    if f then
+      local data = f.readAll()
+      f.close()
+      self.inbox = textutils.unserialize(data) or {}
+    end
+  end
+end
+
+function SecureMsg:save_inbox()
+  local inbox_file = get_inbox_file()
+  local f = fs.open(inbox_file, "w")
+  if f then
+    f.write(textutils.serialize(self.inbox))
+    f.close()
+  end
 end
 
 function SecureMsg:transmit(recipient_id, content)
@@ -542,6 +579,7 @@ function SecureMsg:run()
               timestamp = msg.timestamp or os.time(),
               read      = false,
             })
+            self:save_inbox()
           end
         end
       end
@@ -596,6 +634,7 @@ function SecureMsg:run()
         if total > 0 then
           local real_idx = total - selected + 1
           table.remove(self.inbox, real_idx)
+          self:save_inbox()
           if selected > #self.inbox and selected > 1 then
             selected = selected - 1
           end

@@ -1,4 +1,4 @@
--- install.lua - CERBERUS_OPS Installer v2.2.0
+-- install.lua - CERBERUS_OPS Installer
 -- CC:Tweaked 1.20.1 | Compatible Lua 5.2
 
 -- ============================================================
@@ -101,7 +101,7 @@ end
 --  DATOS DEL INSTALADOR
 -- ============================================================
 
-local VERSION  = "2.3.0"
+local VERSION  = "2.3.5"
 local BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main"
 local DISK_NAME = "CERBERUS-OPS"
 
