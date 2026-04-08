@@ -1,4 +1,4 @@
--- nuclear_control.lua - CERBERUS_OPS Control Nuclear v2.2.0
+-- nuclear_control.lua - CERBERUS_OPS Control Nuclear
 -- CC:Tweaked 1.20.1 | Compatible Lua 5.2
 
 local NuclearControl = {}

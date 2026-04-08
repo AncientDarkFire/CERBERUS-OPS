@@ -2,43 +2,58 @@
 
 Sistema de Red Presidencial para Minecraft con CC: Tweaked.
 
-## Caracteristicas
+## Arquitectura Cliente-Servidor
+
+```
++-------------------+       +-------------------+
+|   PENTAGON        |       |   CLIENTES        |
+|   (Servidor)      |<----->|   (Cerberus)     |
+|                   |       |                   |
+| ID central        |       | - Sentinel HUD   |
+| Gestor clientes   |       | - Nuclear        |
+| Auth central      |       | - Secure Msg     |
+| Centro de red     |       | - Secure Docs    |
++-------------------+       +-------------------+
+```
+
+## Version 1.0.0 (definida en init.lua del servidor)
+
+## Instalacion
+
+### Cliente (CERBERUS)
+```bash
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install.lua install.lua
+install
+```
+
+### Servidor (PENTAGON)
+```bash
+wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/main/install_server.lua install_server.lua
+install_server
+```
+
+## Caracteristicas del Cliente
 
 - **SENTINEL HUD** - Panel de control central
 - **NUCLEAR CONTROL** - Sistema de lanzamiento nuclear
 - **SECURE MSG** - Mensajeria encriptada
-- **SECURE DOCS** - Almacenamiento de documentos clasificados
+- **SECURE DOCS** - Documentos clasificados (4 niveles)
 
 ## Requisitos
 
-- Minecraft Forge 1.20.1
-- CC: Tweaked
+- Minecraft Forge 1.20.1 + CC: Tweaked 1.20.1
 - Disk Drive + Floppy Disk
+- Modem (requerido para comunicacion)
+- Monitor (opcional)
 
-## Instalacion Rapida
+## Canales de Comunicacion
 
-1. Conecta un **Disk Drive** a tu computadora
-2. Inserta un **Floppy Disk**
-3. Descarga el instalador:
-   ```bash
-   wget https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main/install.lua install.lua
-   ```
-4. Ejecuta:
-   ```bash
-   install
-   ```
-5. Usa el disco en cualquier computadora y reinicia
-
-## Comandos
-
-```
-hud      - Panel SENTINEL
-nuclear  - Control Nuclear
-msg      - Mensajeria Segura
-docs     - Documentos Clasificados
-diag     - Diagnostico
-help     - Mostrar ayuda
-```
+| Sistema      | Canal |
+|--------------|-------|
+| Central      | 100   |
+| Nuclear      | 101   |
+| Mensajeria   | 102   |
+| Documentos   | 103   |
 
 ## Documentacion
 

@@ -1,4 +1,4 @@
--- sentinel_hud.lua - CERBERUS_OPS SENTINEL HUD v2.2.0
+-- sentinel_hud.lua - CERBERUS_OPS SENTINEL HUD
 -- CC:Tweaked 1.20.1 | Compatible Lua 5.2
 
 local SentinelHUD = {}

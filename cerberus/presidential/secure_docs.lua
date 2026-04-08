@@ -1,4 +1,4 @@
--- secure_docs.lua - CERBERUS_OPS Documentos Clasificados v2.3.0
+-- secure_docs.lua - CERBERUS_OPS Documentos Clasificados
 -- CC:Tweaked 1.20.1 | Compatible Lua 5.2
 
 local SecureDocs = {}

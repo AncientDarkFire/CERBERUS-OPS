@@ -1,4 +1,4 @@
--- secure_msg.lua - CERBERUS_OPS Mensajeria Segura v2.3.0
+-- secure_msg.lua - CERBERUS_OPS Mensajeria Segura
 -- CC:Tweaked 1.20.1 | Compatible Lua 5.2
 
 local SecureMsg = {}

@@ -1,4 +1,4 @@
--- install.lua - CERBERUS_OPS Installer v2.2.0
+-- install_server.lua - PENTAGON Server Installer v1.0.0
 -- CC:Tweaked 1.20.1 | Compatible Lua 5.2
 
 -- ============================================================
@@ -101,16 +101,16 @@ end
 --  DATOS DEL INSTALADOR
 -- ============================================================
 
-local VERSION  = "2.3.0"
+local VERSION  = "1.0.0"
 local BASE_URL = "https://raw.githubusercontent.com/AncientDarkFire/CERBERUS-OPS/refs/heads/main"
-local DISK_NAME = "CERBERUS-OPS"
+local DISK_NAME = "PENTAGON-SRV"
 
 local FILES = {
-  { path = "/cerberus/init.lua",                      desc = "Boot principal"        },
-  { path = "/cerberus/presidential/sentinel_hud.lua", desc = "SENTINEL HUD"          },
-  { path = "/cerberus/presidential/nuclear_control.lua", desc = "Control Nuclear"    },
-  { path = "/cerberus/presidential/secure_msg.lua",   desc = "Mensajeria Segura"     },
-  { path = "/cerberus/presidential/secure_docs.lua",  desc = "Documentos Clasif."    },
+  { path = "/pentagon/init.lua",            desc = "Servidor PENTAGON"      },
+  { path = "/pentagon/client_manager.lua", desc = "Gestor de Clientes"     },
+  { path = "/pentagon/auth_server.lua",    desc = "Servidor de Auth"       },
+  { path = "/pentagon/network_hub.lua",    desc = "Centro de Red"          },
+  { path = "/pentagon/server_hud.lua",     desc = "Panel de Control"       },
 }
 
 -- ============================================================
@@ -128,13 +128,13 @@ local function splash_screen()
 
   draw_border(px1, py1, px2, py2, C.accent, C.panel)
 
-  write_centered(py1 + 1, "CERBERUS_OPS",               C.accent, C.panel)
+  write_centered(py1 + 1, "PENTAGON",               C.accent, C.panel)
   write_centered(py1 + 2, "========================",   C.dim,    C.panel)
-  write_centered(py1 + 3, "INSTALADOR DE DISCO",        C.title,  C.panel)
-  write_centered(py1 + 4, "Version " .. VERSION,        C.dim,    C.panel)
+  write_centered(py1 + 3, "INSTALADOR DE SERVIDOR",   C.title,  C.panel)
+  write_centered(py1 + 4, "Version " .. VERSION,      C.dim,    C.panel)
   write_centered(py1 + 5, "========================",   C.dim,    C.panel)
-  write_centered(py1 + 6, "Department Of Defense",      C.title,  C.panel)
-  write_centered(py1 + 7, "-   MineField Mods   -",     C.dim,    C.panel)
+  write_centered(py1 + 6, "Department Of Defense",     C.title,  C.panel)
+  write_centered(py1 + 7, "-   MineField Mods   -",   C.dim,    C.panel)
 
   draw_footer()
   sleep(2)
@@ -154,7 +154,7 @@ local function error_screen(title, lines, hint_lines)
   local py1 = mid - math.floor(ph / 2) - 1
   local py2 = py1 + ph + 1
 
-  draw_header("CERBERUS_OPS  //  INSTALADOR")
+  draw_header("PENTAGON // INSTALADOR")
   draw_border(px1, py1, px2, py2, C.err, C.bg)
 
   write_centered(py1 + 1, "[ " .. title .. " ]", C.err, C.bg)
@@ -177,16 +177,13 @@ end
 --  PANTALLA PRINCIPAL DE INSTALACION
 -- ============================================================
 
--- Filas del log de archivos
 local file_log_y = 0
-local file_log_entries = {}
 
 local function install_screen_init(drive_name, disk_path)
   cls()
-  draw_header("CERBERUS_OPS  //  INSTALADOR  v" .. VERSION)
+  draw_header("PENTAGON // INSTALADOR  v" .. VERSION)
   draw_footer("DoD // MineField Mods", "INSTALANDO...")
 
-  -- Panel info disco
   local info_pw = math.min(40, w - 2)
   local info_px = math.floor((w - info_pw) / 2) + 1
   draw_border(info_px, 3, info_px + info_pw - 1, 7, C.accent, C.bg)
@@ -198,7 +195,6 @@ local function install_screen_init(drive_name, disk_path)
   write_at(info_px + 2, 6, "Label  :", C.dim,    C.bg)
   write_at(info_px + 11, 6, DISK_NAME .. " " .. VERSION, C.title, C.bg)
 
-  -- Cabecera de la tabla de archivos
   local tbl_y = 9
   hline(tbl_y, "-", C.dim, C.bg)
   write_at(3,      tbl_y, "+", C.dim, C.bg)
@@ -208,27 +204,20 @@ local function install_screen_init(drive_name, disk_path)
   hline(tbl_y + 1, "-", C.dim, C.bg)
 
   file_log_y = tbl_y + 2
-  file_log_entries = {}
 end
 
 local function log_file_row(index, path, desc, status, status_color)
   local row_y = file_log_y + index - 1
-  -- Limpiar fila
   write_at(1, row_y, string.rep(" ", w), C.dim, C.bg)
-  -- Descripcion
   local short = desc
   if #desc > w - 16 then short = desc:sub(1, w - 17) .. "." end
   write_at(3, row_y, short, C.dim, C.bg)
-  -- Estado alineado a la derecha
   local sx = w - #status - 2
   write_at(sx, row_y, status, status_color, C.bg)
 end
 
--- Barra de progreso total
-local prog_y = 0
-
 local function draw_total_bar(current, total)
-  prog_y = file_log_y + #FILES + 2
+  local prog_y = file_log_y + #FILES + 2
   local label = string.format("Progreso: %d / %d", current, total)
   write_at(1, prog_y, string.rep(" ", w), C.dim, C.bg)
   write_centered(prog_y, label, C.dim, C.bg)
@@ -280,7 +269,7 @@ local function done_screen(installed, failed)
 
   if success then
     write_centered(mid + 3, "Inserta el disco y reinicia.", C.dim,   C.bg)
-    write_centered(mid + 4, "El sistema cargara solo.",     C.dim,   C.bg)
+    write_centered(mid + 4, "El servidor cargara solo.",   C.dim,   C.bg)
   else
     write_centered(mid + 3, "Reintenta la instalacion.",    C.warn,  C.bg)
     write_centered(mid + 4, "Verifica tu conexion.",        C.dim,   C.bg)
@@ -288,7 +277,6 @@ local function done_screen(installed, failed)
 
   write_centered(mid + 5, "Reiniciando en 5s...", C.dim, C.bg)
 
-  -- Barra de cuenta regresiva
   local bar_w = pw - 4
   local bx = px + 2
   for i = 1, bar_w do
@@ -326,12 +314,10 @@ end
 
 local function ensure_dirs(base_path)
   local dirs = {
-    "/cerberus",
-    "/cerberus/presidential",
-    "/cerberus/docs",
+    "/pentagon",
   }
-  if fs.exists(base_path .. "/cerberus") then
-    fs.delete(base_path .. "/cerberus")
+  if fs.exists(base_path .. "/pentagon") then
+    fs.delete(base_path .. "/pentagon")
   end
   for _, d in ipairs(dirs) do
     local fp = base_path .. d
@@ -351,38 +337,12 @@ local function write_file(base_path, rel_path, content)
   return false
 end
 
-local function write_diag(disk_path)
-  local diag = [[
--- CERBERUS OPS - Diagnostico
-term.clear()
-term.setTextColor(colors.green)
-print("CERBERUS OPS - DIAGNOSTICO")
-print("ID: " .. os.computerID())
-print("Uptime: " .. math.floor(os.clock()) .. "s")
-print("")
-print("Perifericos:")
-for _, n in ipairs(peripheral.getNames()) do
-  print("  " .. n .. ": " .. peripheral.getType(n))
-end
-print("Modem: " .. (peripheral.find("modem") and "OK" or "NO"))
-print("Monitor: " .. (peripheral.find("monitor") and "OK" or "NO"))
-if fs.exists("/cerberus") then
-  print("/cerberus: INSTALADO")
-else
-  print("/cerberus: NO INSTALADO")
-end
-]]
-  local f = fs.open(disk_path .. "/cerberus/diag.lua", "w")
-  if f then f.write(diag) f.close() end
-end
-
 -- ============================================================
 --  SECUENCIA PRINCIPAL
 -- ============================================================
 
 splash_screen()
 
--- Buscar drive
 sleep(1)
 local drive_name = find_drive()
 if not drive_name then
@@ -392,7 +352,7 @@ if not drive_name then
   }, {
     "1. Conecta un Disk Drive",
     "2. Inserta un Floppy Disk",
-    "3. Vuelve a ejecutar install",
+    "3. Vuelve a ejecutar install_server",
   })
   sleep(6)
   if mon then term.redirect(native) end
@@ -405,14 +365,13 @@ if not disk.isPresent(drive_name) then
     "no tiene un disco insertado.",
   }, {
     "Inserta un Floppy Disk y",
-    "vuelve a ejecutar install.",
+    "vuelve a ejecutar install_server.",
   })
   sleep(6)
   if mon then term.redirect(native) end
   return
 end
 
--- Preparar disco
 disk.setLabel(drive_name, DISK_NAME .. " " .. VERSION)
 local disk_path = disk.getMountPath(drive_name)
 
@@ -425,7 +384,6 @@ if not disk_path then
   return
 end
 
--- Pantalla de instalacion
 install_screen_init(drive_name, disk_path)
 ensure_dirs(disk_path)
 
@@ -433,7 +391,6 @@ local installed = 0
 local failed    = 0
 
 for i, file in ipairs(FILES) do
-  -- Mostrar fila como "descargando"
   log_file_row(i, file.path, file.desc, "descargando...", C.warn)
   draw_total_bar(i - 1, #FILES + 1)
 
@@ -443,7 +400,7 @@ for i, file in ipairs(FILES) do
     local wrote = write_file(disk_path, file.path, content)
     if wrote then
       log_file_row(i, file.path, file.desc, "[ OK ]", C.ok)
-sleep(2)
+      sleep(2)
       installed = installed + 1
     else
       log_file_row(i, file.path, file.desc, "[WRITE]", C.err)
@@ -459,16 +416,9 @@ sleep(2)
   sleep(2)
 end
 
--- Diag
-log_file_row(#FILES + 1, "/cerberus/diag.lua", "Diagnostico", "escribiendo", C.warn)
-draw_total_bar(#FILES, #FILES + 1)
-write_diag(disk_path)
-log_file_row(#FILES + 1, "/cerberus/diag.lua", "Diagnostico", "[ OK ]", C.ok)
-draw_total_bar(#FILES + 1, #FILES + 1)
-
+draw_total_bar(#FILES, #FILES)
 sleep(1)
 
--- Pantalla final + reboot
 done_screen(installed, failed)
 if mon then term.redirect(native) end
 os.reboot()
