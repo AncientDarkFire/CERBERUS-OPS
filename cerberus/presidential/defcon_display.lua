@@ -1,7 +1,7 @@
--- defcon_display.lua - CERBERUS_OPS DEFCON Display v2.4.0
+-- defcon_display.lua - CERBERUS_OPS DEFCON Display v2.2.0
 -- CC:Tweaked 1.20.1 | Compatible Lua 5.2
 -- Muestra el nivel DEFCON actual recibido via modem.
--- Sincronizacion en tiempo real con el servidor.
+-- Todo el espacio de pantalla se dedica al numero DEFCON.
 
 local DefconDisplay = {}
 
@@ -34,7 +34,6 @@ DefconDisplay.modem         = nil
 DefconDisplay.current_level = 5
 DefconDisplay.last_update   = nil
 DefconDisplay.running       = true
-DefconDisplay.sync_interval = 30
 
 -- ============================================================
 --  NUMEROS EN ASCII GRANDES (5 filas, ancho variable)
@@ -138,35 +137,6 @@ end
 
 local function level_desc(level)
   return LEVELS[level] and LEVELS[level].desc or ""
-end
-
--- ============================================================
---  SINCRONIZACION EN TIEMPO REAL
--- ============================================================
-
-function DefconDisplay:request_sync()
-  if not self.modem then return end
-  self.modem.transmit(100, 100, {
-    type = "DEFCON_REQUEST",
-    from = os.computerID(),
-  })
-end
-
-function DefconDisplay:sync_listener()
-  while self.running do
-    local ev, side, channel, replyChannel, message = os.pullEvent("modem_message")
-    if type(message) == "table" then
-      if message.type == "DEFCON_UPDATE" then
-        local new_level = math.max(1, math.min(5, tonumber(message.level) or 5))
-        if new_level ~= self.current_level then
-          self.current_level = new_level
-          self.last_update = message.timestamp
-          self:draw()
-          self:update_monitor()
-        end
-      end
-    end
-  end
 end
 
 -- ============================================================
@@ -329,72 +299,125 @@ function DefconDisplay:update_monitor()
   local mw, mh = mon.getSize()
   local level  = self.current_level
   local col    = level_color(level)
-  local lbl    = level_label(level)
+  local lbl    = "ESTADO DE " .. level_label(level)
+
+  -- =========================================================
+  --  Layout de 3 zonas (como imagen de referencia):
+  --
+  --  +---------------------------+
+  --  |         DEFCON            |  <- zona_top: fondo col, texto bg
+  --  +---------------------------+
+  --  |                           |
+  --  |            5              |  <- zona_mid: fondo bg, numero BIG col
+  --  |                           |
+  --  +---------------------------+
+  --  |      ESTADO DE PAZ        |  <- zona_bot: fondo bg, texto col
+  --  +---------------------------+
+  --
+  --  Proporciones: top=20%, mid=60%, bot=20%
+  -- =========================================================
+
+  local top_h = math.max(1, math.floor(mh * 0.20))
+  local bot_h = math.max(1, math.floor(mh * 0.20))
+  local mid_h = mh - top_h - bot_h
+
+  local top_y1 = 1
+  local top_y2 = top_h
+  local mid_y1 = top_h + 1
+  local mid_y2 = top_h + mid_h
+  local bot_y1 = mid_y2 + 1
+  local bot_y2 = mh
+
+  -- Helpers locales para el monitor
+  local function mfill(y1, y2, bg)
+    for row = y1, y2 do
+      mon.setBackgroundColor(bg)
+      mon.setCursorPos(1, row)
+      mon.write(string.rep(" ", mw))
+    end
+  end
+
+  local function mwrite_center(y, text, fg, bg)
+    local x = math.max(1, math.floor((mw - #text) / 2) + 1)
+    mon.setBackgroundColor(bg)
+    mon.setTextColor(fg)
+    mon.setCursorPos(x, y)
+    mon.write(text)
+  end
+
+  local function mhline(y, fg, bg)
+    mon.setBackgroundColor(bg)
+    mon.setTextColor(fg)
+    mon.setCursorPos(1, y)
+    mon.write(string.rep("-", mw))
+  end
 
   mon.setBackgroundColor(C.bg)
   mon.clear()
 
-  -- Cabecera del color del nivel
-  for x = 1, mw do
-    mon.setBackgroundColor(col)
-    mon.setTextColor(C.bg)
-    mon.setCursorPos(x, 1)
-    mon.write(" ")
-  end
-  local htxt = "DEFCON"
-  local hx   = math.max(1, math.floor((mw - #htxt) / 2) + 1)
-  mon.setCursorPos(hx, 1)
-  mon.write(htxt)
+  -- ---- ZONA TOP: "DEFCON" con fondo del color del nivel ----
+  mfill(top_y1, top_y2, col)
+  local top_center = top_y1 + math.floor((top_h - 1) / 2)
+  mwrite_center(top_center, "DEFCON", C.bg, col)
 
-  -- Numero enorme: usa BIG escalado x2
-  local digits  = BIG[level]
+  -- Linea separadora top/mid
+  mhline(mid_y1, col, C.bg)
+
+  -- ---- ZONA MID: numero grande centrado ----
+  mfill(mid_y1 + 1, mid_y2, C.bg)
+
+  -- Escalar BIG segun el espacio disponible
+  local digits = BIG[level]
   if digits then
-    local scale   = 2
-    local dw      = #digits[1] * scale
-    local dh      = #digits
+    local dh    = #digits
+    local dw_base = #digits[1]
+
+    -- Calcular escala maxima que cabe en la zona central
+    local scale = 1
+    while (dw_base * (scale + 1)) <= mw - 2
+      and (dh * (scale + 1)) <= (mid_h - 2) do
+      scale = scale + 1
+    end
+    if scale < 1 then scale = 1 end
+
+    local dw      = dw_base * scale
+    local dh_s    = dh * scale
     local start_x = math.max(1, math.floor((mw - dw) / 2) + 1)
-    local start_y = math.max(2, math.floor((mh - dh) / 2))
+    local mid_zone_center = mid_y1 + 1 + math.floor((mid_h - 2) / 2)
+    local start_y = mid_zone_center - math.floor(dh_s / 2)
 
     for row = 1, dh do
       local line = digits[row]
       for ci = 1, #line do
         local ch = line:sub(ci, ci)
-        local px = start_x + (ci - 1) * scale
-        local py = start_y + row - 1
-        for s = 0, scale - 1 do
-          mon.setCursorPos(px + s, py)
-          if ch ~= " " then
-            mon.setBackgroundColor(col)
-            mon.setTextColor(C.bg)
-            mon.write(" ")
-          else
-            mon.setBackgroundColor(C.bg)
-            mon.write(" ")
+        for sy = 0, scale - 1 do
+          for sx = 0, scale - 1 do
+            local px = start_x + (ci - 1) * scale + sx
+            local py = start_y + (row - 1) * scale + sy
+            if py >= mid_y1 + 1 and py <= mid_y2 then
+              mon.setCursorPos(px, py)
+              if ch ~= " " then
+                mon.setBackgroundColor(col)
+                mon.setTextColor(C.bg)
+                mon.write(" ")
+              else
+                mon.setBackgroundColor(C.bg)
+                mon.write(" ")
+              end
+            end
           end
         end
       end
     end
   end
 
-  -- Label centrado debajo del numero
-  local lbl_y = math.min(mh - 1, math.floor(mh * 0.75))
-  local lx    = math.max(1, math.floor((mw - #lbl) / 2) + 1)
-  mon.setCursorPos(lx, lbl_y)
-  mon.setBackgroundColor(C.bg)
-  mon.setTextColor(col)
-  mon.write(lbl)
+  -- Linea separadora mid/bot
+  mhline(bot_y1, col, C.bg)
 
-  -- Footer
-  for x = 1, mw do
-    mon.setCursorPos(x, mh)
-    mon.setBackgroundColor(C.panel)
-    mon.setTextColor(C.title)
-    mon.write(" ")
-  end
-  local footer = os.date("%H:%M:%S")
-  local fx = math.max(1, math.floor((mw - #footer) / 2) + 1)
-  mon.setCursorPos(fx, mh)
-  mon.write(footer)
+  -- ---- ZONA BOT: etiqueta del estado ----
+  mfill(bot_y1 + 1, bot_y2, C.bg)
+  local bot_center = bot_y1 + 1 + math.floor((bot_y2 - bot_y1 - 1) / 2)
+  mwrite_center(bot_center, lbl, col, C.bg)
 end
 
 -- ============================================================
@@ -410,24 +433,19 @@ function DefconDisplay:run()
   end
 
   w, h = term.getSize()
-  self:request_sync()
   self:draw()
   self:update_monitor()
 
   local anim_timer = os.startTimer(0.5)
-  local sync_timer = os.startTimer(self.sync_interval)
 
   while self.running do
     local ev, p1, p2, p3, p4 = os.pullEventRaw()
 
-    if ev == "timer" and p1 == anim_timer then
+    if ev == "timer" then
+      -- Redibujar para pulso animado y reloj
       self:draw()
       self:update_monitor()
       anim_timer = os.startTimer(0.5)
-
-    elseif ev == "timer" and p1 == sync_timer then
-      self:request_sync()
-      sync_timer = os.startTimer(self.sync_interval)
 
     elseif ev == "modem_message" then
       local msg = p4
